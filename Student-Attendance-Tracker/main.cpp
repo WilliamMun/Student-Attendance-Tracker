@@ -1,9 +1,33 @@
+// *********************************************************
+// Program: _________.cpp
+// Course: CCP6114 Programming Fundamentals
+// Lecture Class: TC1L
+// Tutorial Class: TT1L
+// Trimester: 2530
+// Member_1: 252UC2431W | MUN WILLIAM    | MUN.WILLIAM1@STUDENT.MMU.EDU.MY    | 010-830 7571
+// Member_2: 252UC242ZA | WONG QIAN XIAN | WONG.QIAN.XIAN1@STUDENT.MMU.EDU.MY | 011-1098 2661
+// Member_3: 252UC241W5 | KONG ZHUN RUI  | KONG.ZHUN.RUI1@STUDENT.MMU.EDU.MY  | 012-916 2693
+// Member_4: 252UC241TT | ONG ZHONG YIK  | ONG.ZHONG.YIK1@STUDENT.MMU.EDU.MY  | 011-5990 6040
+// *********************************************************
+// Task Distribution
+// Member_1:
+// Member_2:
+// Member_3:
+// Member_4:
+// *********************************************************
+
+// ===========================
+// Preprocessor Directive
+// ===========================
 #include <iostream>
 #include <string>
 #include <limits>
-#include <fstream>   // For CSV output
+#include <fstream>
 using namespace std;
 
+// ===========================
+// Global Variable Initialization
+// ===========================
 // Maximum limits
 const int MAX_COLS = 10;
 const int MAX_ROWS = 100;
@@ -17,6 +41,48 @@ string columnTypes[MAX_COLS];  // INT or TEXT
 // Attendance data storage
 string tableData[MAX_ROWS][MAX_COLS];
 int rowCount = 0;
+
+// =============================
+// Function Prototype
+// =============================
+bool isInteger(string);
+void createSheet();
+void insertRow();
+void displayCSV();
+void saveToCSV();
+
+// =============================
+// MAIN PROGRAM
+// =============================
+int main() {
+    cout << "===========================================\n";
+    cout << "   STUDENT ATTENDANCE TRACKER - MILESTONE 1\n";
+    cout << "===========================================\n\n";
+
+    createSheet();
+
+    // Example loop to insert multiple rows
+    char choice;
+
+    do {
+        insertRow();
+        cout << "Insert another row? (Y/N): ";
+        cin >> choice;
+        cin.ignore();
+        cout << "\n";
+    } while (toupper(choice) == 'Y');
+
+    displayCSV();
+
+    // Auto-save to CSV
+    saveToCSV(sheetName + ".csv");
+
+    cout << "-------------------------------------------\n";
+    cout << "End of Milestone 1 Output\n";
+    cout << "-------------------------------------------\n";
+
+    return 0;
+}
 
 // =============================
 // Helper: Validate INT input
@@ -161,37 +227,4 @@ void saveToCSV(string filename) {
 
     file.close();
     cout << "Data saved to " << filename << endl;
-}
-
-// =============================
-// MAIN PROGRAM
-// =============================
-int main() {
-    cout << "===========================================\n";
-    cout << "   STUDENT ATTENDANCE TRACKER - MILESTONE 1\n";
-    cout << "===========================================\n\n";
-
-    createSheet();
-
-    // Example loop to insert multiple rows
-    char choice;
-
-    do {
-        insertRow();
-        cout << "Insert another row? (Y/N): ";
-        cin >> choice;
-        cin.ignore();
-        cout << "\n";
-    } while (toupper(choice) == 'Y');
-
-    displayCSV();
-
-    // Auto-save to CSV
-    saveToCSV(sheetName + ".csv");
-
-    cout << "-------------------------------------------\n";
-    cout << "End of Milestone 1 Output\n";
-    cout << "-------------------------------------------\n";
-
-    return 0;
 }
