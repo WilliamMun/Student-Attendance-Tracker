@@ -23,6 +23,7 @@
 #include <string>
 #include <limits>
 #include <fstream>
+#include <algorithm>
 using namespace std;
 
 // ===========================
@@ -45,11 +46,12 @@ int rowCount = 0;
 // =============================
 // Function Prototype
 // =============================
-bool isInteger(string);
+bool isInteger(const string &value);
+bool isLabelStudentID(string);
 void createSheet();
 void insertRow();
 void displayCSV();
-void saveToCSV();
+void saveToCSV(string);
 
 // =============================
 // MAIN PROGRAM
@@ -95,6 +97,19 @@ bool isInteger(const string &value) {
 }
 
 // =============================
+// Helper: Validate input similar to Student ID
+// =============================
+bool isLabelStudentID(string value) {
+    value.erase(remove_if(value.begin(), value.end(), ::isspace), value.end());
+
+    for (char &c : value) {
+        c = tolower(c);
+    }
+
+    return (value == "studentid" || value == "id");
+}
+
+// =============================
 // Create Attendance Sheet
 // =============================
 void createSheet() {
@@ -119,12 +134,21 @@ void createSheet() {
         cout << "Enter column " << i + 1 << " name: ";
         getline(cin, columnNames[i]);
 
+        if (isLabelStudentID(columnNames[i]))
+        {
+            columnTypes[i] = "INT";
+        } else {
+            columnTypes[i] = "TEXT";
+        }
+
+        /*
         cout << "Enter type for " << columnNames[i] << " (INT/TEXT): ";
         cin >> columnTypes[i];
         cin.ignore();
 
         // Convert type to uppercase for safety
         for (auto &c : columnTypes[i]) c = toupper(c);
+        */
     }
 
     cout << "\nSheet structure created successfully.\n\n";
@@ -147,7 +171,7 @@ void insertRow() {
         string value;
 
         while (true) {
-            cout << "Enter " << columnNames[col] << ": ";
+            cout << "Enter " << columnNames[col] << "(" << columnTypes[col] << ")" <<  ": ";
             getline(cin, value);
 
             // INT validation
@@ -160,7 +184,7 @@ void insertRow() {
                 }
             }
             else {
-                // TEXT → no validation needed
+                // TEXT -> no validation needed
                 tableData[rowCount][col] = value;
                 break;
             }
