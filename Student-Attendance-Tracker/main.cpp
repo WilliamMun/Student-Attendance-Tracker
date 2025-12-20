@@ -38,6 +38,7 @@ string sheetName;
 int columnCount;
 string columnNames[MAX_COLS];
 string columnTypes[MAX_COLS];  // INT or TEXT
+string columnDescription[MAX_COLS];
 
 // Attendance data storage
 string tableData[MAX_ROWS][MAX_COLS];
@@ -141,6 +142,9 @@ void createSheet() {
             columnTypes[i] = "TEXT";
         }
 
+        cout << "Enter column " << i + 1 << " description (enter x if you want to leave it blank):" << endl;
+        getline(cin, columnDescription[i]);
+
         /*
         cout << "Enter type for " << columnNames[i] << " (INT/TEXT): ";
         cin >> columnTypes[i];
@@ -171,7 +175,10 @@ void insertRow() {
         string value;
 
         while (true) {
-            cout << "Enter " << columnNames[col] << "(" << columnTypes[col] << ")" <<  ": ";
+            if(columnDescription[col] == "x")
+                cout << "Enter " << columnNames[col] << " (" << columnTypes[col] << "): ";
+            else
+                cout << "Enter " << columnNames[col] << " (" << columnTypes[col] << ")" << " [" << columnDescription[col] << "]"  ": ";
             getline(cin, value);
 
             // INT validation
@@ -236,6 +243,13 @@ void saveToCSV(string filename) {
     // Write headers
     for (int i = 0; i < columnCount; i++) {
         file << columnNames[i];
+        if (i < columnCount - 1) file << ",";
+    }
+    file << "\n";
+
+    // Write descriptions
+    for (int i = 0; i < columnCount; i++) {
+        file << columnDescription[i];
         if (i < columnCount - 1) file << ",";
     }
     file << "\n";
