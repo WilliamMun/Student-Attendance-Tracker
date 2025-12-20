@@ -78,7 +78,7 @@ int main() {
     displayCSV();
 
     // Auto-save to CSV
-    saveToCSV(sheetName + ".csv");
+    saveToCSV(sheetName + ".txt");
 
     cout << "-------------------------------------------\n";
     cout << "End of Milestone 1 Output\n";
