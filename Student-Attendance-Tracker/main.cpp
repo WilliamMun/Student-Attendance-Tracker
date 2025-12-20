@@ -31,7 +31,7 @@ using namespace std;
 // ===========================
 // Maximum limits
 const int MAX_COLS = 10;
-const int MAX_ROWS = 100;
+const int MAX_ROWS = 2000;
 
 // Global variables for sheet structure
 string sheetName;
