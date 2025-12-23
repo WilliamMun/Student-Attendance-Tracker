@@ -24,6 +24,7 @@
 #include <limits>
 #include <fstream>
 #include <algorithm>
+#include <iomanip>
 using namespace std;
 
 // ===========================
@@ -51,6 +52,7 @@ bool isInteger(const string &value);
 bool isLabelStudentID(string);
 void createSheet();
 void insertRow();
+void printCentered(string, int);
 void displayCSV();
 void saveToCSV(string);
 
@@ -202,6 +204,21 @@ void insertRow() {
     cout << "Row inserted successfully.\n\n";
 }
 
+
+void printCentered(string text, int width) {
+    //Remove leading/trailing whitespace to ensure accurate length
+    text.erase(text.find_last_not_of(" \n\r\t") + 1);
+    text.erase(0, text.find_first_not_of(" \n\r\t"));
+
+    int len = text.length();
+    if (len >= width) {
+        cout << text;
+    } else {
+        int pos = (width - len) / 2;
+        cout << string(pos, ' ') << text << string(width - len - pos, ' ');
+    }
+}
+
 // =============================
 // View sheet in CSV mode
 // =============================
@@ -210,18 +227,33 @@ void displayCSV() {
     cout << "View Attendance Sheet (CSV Mode)\n";
     cout << "-------------------------------------------\n";
 
+    int maxLength[columnCount];
+
+    for (int j = 0; j < columnCount; j++) {
+        maxLength[j] = columnNames[j].length();
+
+        for (int k = 0; k < rowCount; k++) {
+            // Use a temporary trimmed string for length checking
+            string temp = tableData[k][j];
+            temp.erase(temp.find_last_not_of(" ") + 1);
+            if (temp.length() > (size_t)maxLength[j]){
+                maxLength[j] = temp.length();
+            }
+        }
+    }
+
     // Print column headers
     for (int i = 0; i < columnCount; i++) {
-        cout << columnNames[i];
-        if (i < columnCount - 1) cout << ", ";
+        printCentered(columnNames[i], maxLength[i]);
+        if (i < columnCount - 1) cout << " , ";
     }
     cout << "\n";
 
     // Print rows
     for (int r = 0; r < rowCount; r++) {
         for (int c = 0; c < columnCount; c++) {
-            cout << tableData[r][c];
-            if (c < columnCount - 1) cout << ", ";
+            printCentered(tableData[r][c], maxLength[c]);
+            if (c < columnCount - 1) cout << " , ";
         }
         cout << "\n";
     }
