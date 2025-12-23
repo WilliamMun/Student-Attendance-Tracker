@@ -1,5 +1,5 @@
 // *********************************************************
-// Program: _________.cpp
+// Program: main.cpp
 // Course: CCP6114 Programming Fundamentals
 // Lecture Class: TC1L
 // Tutorial Class: TT1L
@@ -25,6 +25,7 @@
 #include <fstream>
 #include <algorithm>
 #include <iomanip>
+#include <filesystem>
 using namespace std;
 
 // ===========================
@@ -50,6 +51,7 @@ int rowCount = 0;
 // =============================
 bool isInteger(const string &value);
 bool isLabelStudentID(string);
+bool filenameExisted(string);
 void createSheet();
 void insertRow();
 void printCentered(string, int);
@@ -113,13 +115,30 @@ bool isLabelStudentID(string value) {
 }
 
 // =============================
+// Helper: Validate filename existed
+// =============================
+bool filenameExisted(string fileName) {
+    if (std::filesystem::exists(fileName)){
+        cout << "Error: The filename " << sheetName << " already existed.\n" << endl;
+        return false;
+    } else {
+        cout << "\nAttendance sheet \"" << sheetName << "\" created successfully.\n\n";
+        return true;
+    }
+}
+
+// =============================
 // Create Attendance Sheet
 // =============================
 void createSheet() {
-    cout << "Enter attendance sheet name: ";
-    cin >> sheetName;
+    bool fileStatus;
+    do {
+        cout << "Enter attendance sheet name: ";
+        cin >> sheetName;
+        string fileName = sheetName+".txt";
 
-    cout << "\nAttendance sheet \"" << sheetName << "\" created successfully.\n\n";
+        fileStatus = filenameExisted(fileName);
+    } while(fileStatus == false);
 
     // Number of columns
     do {
@@ -147,14 +166,6 @@ void createSheet() {
         cout << "Enter column " << i + 1 << " description (enter x if you want to leave it blank):" << endl;
         getline(cin, columnDescription[i]);
 
-        /*
-        cout << "Enter type for " << columnNames[i] << " (INT/TEXT): ";
-        cin >> columnTypes[i];
-        cin.ignore();
-
-        // Convert type to uppercase for safety
-        for (auto &c : columnTypes[i]) c = toupper(c);
-        */
     }
 
     cout << "\nSheet structure created successfully.\n\n";
@@ -204,7 +215,9 @@ void insertRow() {
     cout << "Row inserted successfully.\n\n";
 }
 
-
+// =============================
+// Helper: Print Text Align to Center
+// =============================
 void printCentered(string text, int width) {
     //Remove leading/trailing whitespace to ensure accurate length
     text.erase(text.find_last_not_of(" \n\r\t") + 1);
