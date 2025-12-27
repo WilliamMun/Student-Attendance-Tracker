@@ -52,6 +52,7 @@ int rowCount = 0;
 bool isInteger(const string &value);
 bool isLabelStudentID(string);
 bool filenameExisted(string);
+bool isEmpty(string);
 void createSheet();
 void insertRow();
 void printCentered(string, int);
@@ -128,6 +129,16 @@ bool filenameExisted(string fileName) {
 }
 
 // =============================
+// Helper: Validate empty input
+// =============================
+bool isEmpty(string value) {
+    if (value == "")
+        return true;
+    else
+        return false;
+}
+
+// =============================
 // Create Attendance Sheet
 // =============================
 void createSheet() {
@@ -153,19 +164,26 @@ void createSheet() {
 
     // Enter column names and types
     for (int i = 0; i < columnCount; i++) {
-        cout << "Enter column " << i + 1 << " name: ";
-        getline(cin, columnNames[i]);
+        do {
+            cout << "Enter column " << i + 1 << " name: ";
+            getline(cin, columnNames[i]);
+
+            if (isEmpty(columnNames[i]))
+                cout << "Error: Input cannot be empty.\n";
+        } while (isEmpty(columnNames[i]));
 
         if (isLabelStudentID(columnNames[i]))
-        {
             columnTypes[i] = "INT";
-        } else {
+        else
             columnTypes[i] = "TEXT";
-        }
 
-        cout << "Enter column " << i + 1 << " description (enter x if you want to leave it blank):" << endl;
-        getline(cin, columnDescription[i]);
+        do {
+            cout << "Enter column " << i + 1 << " description (enter x if you want to leave it blank):" << endl;
+            getline(cin, columnDescription[i]);
 
+            if (isEmpty(columnDescription[i]))
+                cout << "Error: Input cannot be empty.\n";
+        } while (isEmpty(columnDescription[i]));
     }
 
     cout << "\nSheet structure created successfully.\n\n";
@@ -188,7 +206,7 @@ void insertRow() {
         string value;
 
         while (true) {
-            if(columnDescription[col] == "x")
+            if(columnDescription[col] == "x" || columnDescription[col] == "X")
                 cout << "Enter " << columnNames[col] << " (" << columnTypes[col] << "): ";
             else
                 cout << "Enter " << columnNames[col] << " (" << columnTypes[col] << ")" << " [" << columnDescription[col] << "]"  ": ";
