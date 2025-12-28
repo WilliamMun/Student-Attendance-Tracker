@@ -10,10 +10,10 @@
 // Member_4: 252UC241TT | ONG ZHONG YIK  | ONG.ZHONG.YIK1@STUDENT.MMU.EDU.MY  | 011-5990 6040
 // *********************************************************
 // Task Distribution
-// Member_1:
-// Member_2:
-// Member_3:
-// Member_4:
+// Member_1: Flowchart, pseudocode, and coding of function isInteger(), isLabelStudentID(), isEmpty(), Structured diagram for main, Program and Source code documentation
+// Member_2: Flowchart, pseudocode, and coding of function filenameExisted(), createSheet()
+// Member_3: Flowchart, pseudocode, and coding of function insertRow(), printCentered() and main()
+// Member_4: Flowchart, pseudocode, and coding of function displayCSV() and saveToCSV()
 // *********************************************************
 
 // ===========================
