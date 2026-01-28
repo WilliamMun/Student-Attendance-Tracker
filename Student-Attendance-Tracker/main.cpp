@@ -26,7 +26,10 @@
 #include <algorithm>
 #include <iomanip>
 #include <filesystem>
+#include <vector>
 using namespace std;
+
+namespace fs = std::filesystem;
 
 // ===========================
 // Global Variable Initialization
@@ -58,17 +61,105 @@ void insertRow();
 void printCentered(string, int);
 void displayCSV();
 void saveToCSV(string);
+bool isValidFolderName(const string&);
+string trimFolderName(string&);
+bool createDatabase(const string&);
+void loadDatabase();
+void showDatabase();
+void loadSheet();
+void showSheet();
+void updateRecord();
+void deleteRecord();
 
 // =============================
 // MAIN PROGRAM
 // =============================
 int main() {
+
+    // Local variable initialization
+    int choiceDatabase, choiceSheet, choiceRecord;
+    string folderName;
+    string sheetName;
+    bool createDatabaseStatus, createSheetStatus, choiceDatabaseStatus, choiceSheetStatus, choiceRecordStatus;
+    bool exitProgram = false;
+    vector<string> folderList;
+    vector<string> sheetList;
+
     cout << "===========================================\n";
-    cout << "   STUDENT ATTENDANCE TRACKER - MILESTONE 1\n";
+    cout << "  STUDENT ATTENDANCE TRACKER - MILESTONE 2\n";
     cout << "===========================================\n\n";
+    cout << "Welcome to MMU Student Attendance Tracker!\n" << endl;
 
+    //LEVEL 1: Database selection
+    do {
+        //loadDatabase();
+        //showDatabase();
+        cout << "Please select the database or create a new database: ";
+        cin >> choiceDatabase;
+
+        //LEVEL 1: Database Choice Input Validation + Process
+        do {
+            bool choiceDatabaseStatus = true;
+            if(choiceDatabase == -1){
+                do{
+                    cout << "Enter database name: (Cannot contain illegal character:\\/:*?\"<>|)" << endl;
+                    getline(cin, folderName);
+
+                    if(isEmpty(folderName)){
+                        cout << "Error: Database name cannot be empty. Please try again." << endl;
+                        continue;
+                        choiceDatabaseStatus = false;
+                    }
+
+                    createDatabaseStatus = createDatabase(folderName);
+
+                } while (!createDatabaseStatus);
+
+            } else if(choiceDatabase == -2){
+                exitProgram = true;
+                break;
+            } else if(){
+
+            } else {
+                cout << "Error: Invalid choice. Please try again." << endl;
+                choiceDatabaseStatus = false;
+            }
+        } while(choiceDatabaseStatus == false);
+
+        if (choiceDatabase != -1 || choiceDatabase != -2){
+
+            //LEVEL 2: Sheet selection
+            do {
+                //loadSheet();
+                cout << "Please select the attendance sheet you want to update or create a new attendance sheet: ";
+                cin >> choiceSheet;
+
+                //LEVEL 2: Sheet Choice Input Validation + Process
+                do {
+                    bool choiceSheetStatus = true;
+                    if(choiceSheet == -1){
+
+                    }
+                }
+                //showSheet();
+                //displayCSV();
+
+                cout << "Action you can perform:" << endl;
+                cout << "1- Insert New Record" << endl;
+                cout << "2- Update Current Record" << endl;
+                cout << "3- Delete Record" << endl;
+                cout << "4- Exit Attendance Sheet" << endl;
+                cout << "5- Exit The Program" << endl;
+            }
+        }
+
+    } while(exitProgram == false);
+
+    cout << "Thank you for using MMU Student Attendance Tracker System!" << endl;
+
+
+/*
     createSheet();
-
     // Example loop to insert multiple rows
     char choice;
 
@@ -88,7 +179,7 @@ int main() {
     cout << "-------------------------------------------\n";
     cout << "End of Milestone 1 Output\n";
     cout << "-------------------------------------------\n";
-
+*/
     return 0;
 }
 
@@ -119,7 +210,7 @@ bool isLabelStudentID(string value) {
 // Helper: Validate filename existed
 // =============================
 bool filenameExisted(string fileName) {
-    if (std::filesystem::exists(fileName)){
+    if (fs::exists(fileName)){
         cout << "Error: The filename " << sheetName << " already existed.\n" << endl;
         return false;
     } else {
@@ -328,4 +419,63 @@ void saveToCSV(string filename) {
 
     file.close();
     cout << "Data saved to " << filename << endl;
+}
+
+// =============================
+// Helper: Validate folderName
+// =============================
+bool isValidFolderName(const string& folderName){
+    string forbidden = "\\/:*?\"<>|";
+
+    for (char c : folderName){
+        if(forbidden.find(c) != string::npos)
+            return false;
+    }
+
+    if(folderName.back() == '.'){
+        return false;
+    }
+
+    return true;
+}
+
+// =============================
+// Helper: Trim space at the end of folderName
+// =============================
+string trimFolderName(string& folderName){
+    int counter = 0;
+    while(!isEmpty(folderName) && folderName.back() == ' '){
+        folderName.pop_back();
+        counter++;
+    }
+    if (counter>0){
+        cout << "Note: Trailing space detected and removed.";
+    }
+    return folderName;
+}
+
+// =============================
+// Create Database (Folder)
+// =============================
+bool createDatabase(const string& folderName){
+    if (!isValidFolderName(folderName))){
+        cout << "Error: Database name invalid. It may contains illegal characters (\\/:*?\"<>|.)" << endl;
+        return false;
+    }
+    folderName = trimFolderName(folderName);
+    fs::path relativePath(folderName);
+
+    // Error handling: Check duplication of folderName
+    if (fs::exists(relativePath)){
+        cout << "Error: Database name already exists. Please give a different name." << endl;
+        return false;
+    }
+
+    if (fs::create_directory(relativePath)){
+        cout << "Database " << folderName << " created successfully!" << endl;
+        return true;
+    } else {
+        cout << "Error: Database failed to be created. Please try again." << endl;
+        return false;
+    }
 }
