@@ -1,0 +1,6 @@
+Student ID,Name,Lecture Section ,Tutorial Group,Status
+1252XXXX- Intake 2520; 1253XXXX- Intake 2530,x,TC1L - TC5L,TT1L - T15L,0- Absent; 1- Present; 2- Absent with Reason 
+12520003,Annie,TC3L,T10L,1
+12520004,Cayden,TC4L,T12L,0
+12530003,Jessie,TC2L,TT7L,2
+12530004,Taylor,TC1L,TT3L,1
