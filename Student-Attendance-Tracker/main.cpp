@@ -10,10 +10,10 @@
 // Member_4: 252UC241TT | ONG ZHONG YIK  | ONG.ZHONG.YIK1@STUDENT.MMU.EDU.MY  | 011-5990 6040
 // *********************************************************
 // Task Distribution
-// Member_1: Flowchart, pseudocode, and coding of function isInteger(), isLabelStudentID(), isEmpty(), Structured diagram for main, Program and Source code documentation
-// Member_2: Flowchart, pseudocode, and coding of function filenameExisted(), createSheet()
-// Member_3: Flowchart, pseudocode, and coding of function insertRow(), printCentered() and main()
-// Member_4: Flowchart, pseudocode, and coding of function displayCSV() and saveToCSV()
+// Member_1:
+// Member_2:
+// Member_3:
+// Member_4:
 // *********************************************************
 
 // ===========================
@@ -56,18 +56,19 @@ bool isInteger(const string &value);
 bool isLabelStudentID(string);
 bool filenameExisted(string);
 bool isEmpty(string);
-void createSheet();
+void createSheet(); // do modification on this
 void insertRow();
 void printCentered(string, int);
 void displayCSV();
 void saveToCSV(string);
-bool isValidFolderName(const string&);
-string trimFolderName(string&);
+bool isValidDatabaseName(const string&);
+string trimDatabaseName(string&);
 bool createDatabase(const string&);
 void loadDatabase();
 void showDatabase();
 void loadSheet();
 void showSheet();
+void loadRecord();
 void updateRecord();
 void deleteRecord();
 
@@ -78,11 +79,15 @@ int main() {
 
     // Local variable initialization
     int choiceDatabase, choiceSheet, choiceRecord;
-    string folderName;
+    int noOfDatabase, noOfSheet, noOfRecord;
+    string databaseName;
     string sheetName;
+    string currentDatabase, currentSheet;
     bool createDatabaseStatus, createSheetStatus, choiceDatabaseStatus, choiceSheetStatus, choiceRecordStatus;
     bool exitProgram = false;
-    vector<string> folderList;
+    bool exitDatabase = false;
+    bool exitSheet = false;
+    vector<string> databaseList;
     vector<string> sheetList;
 
     cout << "===========================================\n";
@@ -96,69 +101,151 @@ int main() {
         //showDatabase();
         cout << "Please select the database or create a new database: ";
         cin >> choiceDatabase;
+        cin.ignore(1000, '\n');
 
         //LEVEL 1: Database Choice Input Validation + Process
         do {
-            bool choiceDatabaseStatus = true;
+            choiceDatabaseStatus = true;
             if(choiceDatabase == -1){
                 do{
                     cout << "Enter database name: (Cannot contain illegal character:\\/:*?\"<>|)" << endl;
-                    getline(cin, folderName);
+                    getline(cin, databaseName);
 
-                    if(isEmpty(folderName)){
+                    if(isEmpty(databaseName)){
                         cout << "Error: Database name cannot be empty. Please try again." << endl;
-                        continue;
                         choiceDatabaseStatus = false;
+                        continue;
                     }
 
-                    createDatabaseStatus = createDatabase(folderName);
+                    createDatabaseStatus = createDatabase(databaseName);
+                    if(createDatabaseStatus){
+                        currentDatabase = databaseName;
+                    }
 
-                } while (!createDatabaseStatus);
+                } while (!createDatabaseStatus || !choiceDatabaseStatus);
 
             } else if(choiceDatabase == -2){
                 exitProgram = true;
                 break;
             } else if(){
-
+                //leave when loadDatabase() is done
             } else {
                 cout << "Error: Invalid choice. Please try again." << endl;
                 choiceDatabaseStatus = false;
             }
-        } while(choiceDatabaseStatus == false);
 
-        if (choiceDatabase != -1 || choiceDatabase != -2){
+        } while(!choiceDatabaseStatus);
+
+        if (choiceDatabase != -1 && choiceDatabase != -2){
 
             //LEVEL 2: Sheet selection
             do {
                 //loadSheet();
+                //showSheet();
                 cout << "Please select the attendance sheet you want to update or create a new attendance sheet: ";
                 cin >> choiceSheet;
+                cin.ignore(1000, '\n');
 
                 //LEVEL 2: Sheet Choice Input Validation + Process
                 do {
-                    bool choiceSheetStatus = true;
+                    choiceSheetStatus = true;
                     if(choiceSheet == -1){
+                        do {
+                            cout << "Enter sheet name: (Cannot contain illegal character:\\/:*?\"<>|)" << endl;
+                            getline(cin, sheetName);
 
+                            if(isEmpty(sheetName)){
+                                cout << "Error: Sheet name cannot be empty. Please try again." << endl;
+                                continue;
+                                choiceSheetStatus = false;
+                            }
+
+                            createSheetStatus = createSheet(sheetName);
+
+                            if(createSheetStatus){
+                                currentSheet = sheetName;
+                            }
+
+                        } while(!createSheetStatus || !choiceSheetStatus);
+
+                    } else if(choiceSheet == -2) {
+                        exitDatabase = true;
+                        cout << "Exit from " << databaseName << " ..." << endl;
+                        break;
+                    } else if(choiceSheet == -3)) {
+                        exitDatabase = true;
+                        exitProgram = true;
+                        break;
+                    } else if() {
+                        //leave when loadSheet() is done
+                    } else {
+                        cout << "Error: Invalid choice. Please try again." << endl;
+                        choiceSheetStatus = false;
                     }
-                }
-                //showSheet();
-                //displayCSV();
 
-                cout << "Action you can perform:" << endl;
-                cout << "1- Insert New Record" << endl;
-                cout << "2- Update Current Record" << endl;
-                cout << "3- Delete Record" << endl;
-                cout << "4- Exit Attendance Sheet" << endl;
-                cout << "5- Exit The Program" << endl;
-            }
+                } while(!choiceSheetStatus);
+
+                if (choiceSheet != -1 && choiceSheet != -2 && choiceSheet != -3) {
+
+                    //LEVEL 3: Record selection
+                    do {
+                        //TO-DO: Check if is new sheet, then directly prompt user to input new record as many as they want (as in m1)
+                        //loadRecord();
+                        //displayCSV();
+                        cout << "Action you can perform:" << endl;
+                        cout << "1- Insert New Record" << endl;
+                        cout << "2- Update Current Record" << endl;
+                        cout << "3- Delete Record" << endl;
+                        cout << "4- Exit Attendance Sheet" << endl;
+                        cout << "5- Exit The Program" << endl;
+                        cout << "Select the action you want to perform:";
+                        cin >> choiceRecord;
+                        cin.ignore(1000, '\n');
+
+                        //LEVEL 3: Record Choice Input Validation + Process
+                        do {
+                            choiceRecordStatus = true;
+                            switch(choiceRecord){
+                                case 1:
+                                    insertRow();
+                                    break;
+                                case 2:
+                                    //updateRecord();
+                                    break;
+                                case 3:
+                                    //deleteRecord();
+                                    break;
+                                case 4:
+                                    exitSheet = true;
+                                    cout << "Exit from " << sheetName << " ..." << endl;
+                                    break;
+                                case 5:
+                                    exitSheet = exitDatabase = exitProgram = true;
+                                    break;
+                                default:
+                                    cout << "Error: Invalid choice. Please try again." << endl;
+                                    choiceRecordStatus = false;
+                            }
+
+                        } while(!choiceRecordStatus);
+                    }
+
+                    currentSheet = "";
+                }
+
+            } while(!exitDatabase);
+
+            currentDatabase = "";
         }
 
-    } while(exitProgram == false);
+    } while(!exitProgram);
 
     cout << "Thank you for using MMU Student Attendance Tracker System!" << endl;
 
+    return 0;
+}
 
-/*
+/* Milestone 1 Code:
     createSheet();
     // Example loop to insert multiple rows
     char choice;
@@ -180,8 +267,6 @@ int main() {
     cout << "End of Milestone 1 Output\n";
     cout << "-------------------------------------------\n";
 */
-    return 0;
-}
 
 // =============================
 // Helper: Validate INT input
@@ -422,17 +507,17 @@ void saveToCSV(string filename) {
 }
 
 // =============================
-// Helper: Validate folderName
+// Helper: Validate databaseName
 // =============================
-bool isValidFolderName(const string& folderName){
+bool isValidDatabaseName(const string& databaseName){
     string forbidden = "\\/:*?\"<>|";
 
-    for (char c : folderName){
+    for (char c : databaseName){
         if(forbidden.find(c) != string::npos)
             return false;
     }
 
-    if(folderName.back() == '.'){
+    if(databaseName.back() == '.'){
         return false;
     }
 
@@ -440,39 +525,39 @@ bool isValidFolderName(const string& folderName){
 }
 
 // =============================
-// Helper: Trim space at the end of folderName
+// Helper: Trim space at the end of databaseName
 // =============================
-string trimFolderName(string& folderName){
+string trimDatabaseName(string& databaseName){
     int counter = 0;
-    while(!isEmpty(folderName) && folderName.back() == ' '){
-        folderName.pop_back();
+    while(!isEmpty(databaseName) && databaseName.back() == ' '){
+        databaseName.pop_back();
         counter++;
     }
     if (counter>0){
         cout << "Note: Trailing space detected and removed.";
     }
-    return folderName;
+    return databaseName;
 }
 
 // =============================
-// Create Database (Folder)
+// Create Database (folder)
 // =============================
-bool createDatabase(const string& folderName){
-    if (!isValidFolderName(folderName))){
+bool createDatabase(const string& databaseName){
+    if (!isValidDatabaseName(databaseName))){
         cout << "Error: Database name invalid. It may contains illegal characters (\\/:*?\"<>|.)" << endl;
         return false;
     }
-    folderName = trimFolderName(folderName);
-    fs::path relativePath(folderName);
+    databaseName = trimDatabaseName(databaseName);
+    fs::path relativePath(databaseName);
 
-    // Error handling: Check duplication of folderName
+    // Error handling: Check duplication of databaseName
     if (fs::exists(relativePath)){
         cout << "Error: Database name already exists. Please give a different name." << endl;
         return false;
     }
 
     if (fs::create_directory(relativePath)){
-        cout << "Database " << folderName << " created successfully!" << endl;
+        cout << "Database " << databaseName << " created successfully!" << endl;
         return true;
     } else {
         cout << "Error: Database failed to be created. Please try again." << endl;
