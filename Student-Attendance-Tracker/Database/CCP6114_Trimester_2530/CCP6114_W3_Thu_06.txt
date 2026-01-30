@@ -1,0 +1,6 @@
+Student ID,Name,Status
+1252XXXX- Intake 2520; 1253XXXX- Intake 2530,x,0- Absent; 1- Present; 2- Absent with Reason
+12520007,Charles,0
+12520008,Hazel,1
+12530007,Arthur,1
+12530008,Evangeline,0
