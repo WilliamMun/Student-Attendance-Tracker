@@ -564,3 +564,111 @@ bool createDatabase(const string& databaseName){
         return false;
     }
 }
+
+//=========================================
+//load record, update record, delete record
+//=========================================
+void loadRecord(string selectedSheet) {
+    string fileName = selectedSheet + ".txt";
+    ifstream file(fileName);
+
+    if (!file) {
+        cout << "Error: File " << fileName << " not found!\n\n";
+        sheetName = "";
+        return;
+    }
+
+    string line, word;
+
+    // 1. Retrieve headers
+    if (getline(file, line)) {
+        stringstream ss(line);
+        columnCount = 0;
+        while (getline(ss, word, ',') && columnCount < MAX_COLS) {
+            columnNames[columnCount] = word;
+            columnTypes[columnCount] = (isLabelStudentID(word)) ? "INT" : "TEXT";
+            columnCount++;
+        }
+    }
+
+    // 2. REFINED: Retrieve descriptions instead of skipping
+    if (getline(file, line)) {
+        stringstream ssDesc(line);
+        int dCol = 0;
+        while (getline(ssDesc, word, ',') && dCol < columnCount) {
+            columnDescription[dCol] = word;
+            dCol++;
+        }
+    }
+
+    // 3. Retrieve records
+    rowCount = 0;
+    while (rowCount < MAX_ROWS && getline(file, line)) {
+        stringstream ss(line);
+        int col = 0;
+        while (getline(ss, word, ',') && col < columnCount) {
+            attendanceRecords[rowCount].fields[col] = word;
+            col++;
+        }
+        rowCount++;
+    }
+
+    file.close();
+    sheetName = selectedSheet;
+    cout << "\nFile loaded successfully! " << rowCount << " records retrieved.\n";
+}
+
+void updateRecord() {
+    int idCol = findIDColumn();
+    if (idCol == -1) {
+        cout << "Error: No Student ID column defined. Cannot search.\n";
+        return;
+    }
+    string id;
+    cout << "Select Student ID you want to update: ";
+    getline(cin, id);
+
+    for (int i = 0; i < rowCount; i++) {
+        if (attendanceRecords[i].fields[idCol] == id) {
+            cout << "\nUpdating record for " << id << ". Enter 'x' to keep current value.\n";
+            for (int j = 0; j < columnCount; j++) {
+                string val;
+                cout << "Column: " << columnNames[j] << " (Current: " << attendanceRecords[i].fields[j] << "): ";
+                getline(cin, val);
+                if (val != "x" && val != "X") {
+                    attendanceRecords[i].fields[j] = val;
+                }
+            }
+            cout << "Update successful!\n";
+            return;
+        }
+    }
+    cout << "ERROR: Student ID " << id << " not found!\n";
+}
+
+void deleteRecord() {
+    int idCol = findIDColumn();
+    if (idCol == -1) return;
+    string id;
+    cout << "Select Student ID you want to delete: ";
+    getline(cin, id);
+
+    for (int i = 0; i < rowCount; i++) {
+        if (attendanceRecords[i].fields[idCol] == id) {
+            cout << "\nRecord found: ";
+            for(int c=0; c<columnCount; c++) cout << attendanceRecords[i].fields[c] << " ";
+
+            cout << "\nAre you sure you want to delete? (Y/N): ";
+            char confirm; cin >> confirm; cin.ignore();
+            if (toupper(confirm) == 'Y') {
+                for (int k = i; k < rowCount - 1; k++) {
+                    attendanceRecords[k] = attendanceRecords[k + 1];
+                }
+                rowCount--;
+                cout << "Delete successful!\n";
+            }
+            return;
+        }
+    }
+    cout << "ERROR: Student ID " << id << " not found.\n";
+}
