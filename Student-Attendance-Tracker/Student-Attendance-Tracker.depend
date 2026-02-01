@@ -1,0 +1,11 @@
+# depslib dependency file v1.0
+1769937539 source:c:\users\kzrui\project\student-attendance-tracker\main.cpp
+	<iostream>
+	<string>
+	<limits>
+	<fstream>
+	<algorithm>
+	<iomanip>
+	<filesystem>
+	<vector>
+

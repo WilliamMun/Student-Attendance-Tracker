@@ -56,7 +56,7 @@ bool isInteger(const string &value);
 bool isLabelStudentID(string);
 bool filenameExisted(string);
 bool isEmpty(string);
-void createSheet(); // do modification on this
+bool createSheet(string& sheetName); // do modification on this
 void insertRow();
 void printCentered(string, int);
 void displayCSV();
@@ -127,7 +127,7 @@ int main() {
             } else if(choiceDatabase == -2){
                 exitProgram = true;
                 break;
-            } else if(){
+            } else if(false){
                 //leave when loadDatabase() is done
             } else {
                 cout << "Error: Invalid choice. Please try again." << endl;
@@ -172,11 +172,11 @@ int main() {
                         exitDatabase = true;
                         cout << "Exit from " << databaseName << " ..." << endl;
                         break;
-                    } else if(choiceSheet == -3)) {
+                    } else if(choiceSheet == -3) {
                         exitDatabase = true;
                         exitProgram = true;
                         break;
-                    } else if() {
+                    } else if(false) {
                         //leave when loadSheet() is done
                     } else {
                         cout << "Error: Invalid choice. Please try again." << endl;
@@ -228,7 +228,7 @@ int main() {
                             }
 
                         } while(!choiceRecordStatus);
-                    }
+                    } while (!exitSheet);
 
                     currentSheet = "";
                 }
@@ -317,7 +317,7 @@ bool isEmpty(string value) {
 // =============================
 // Create Attendance Sheet
 // =============================
-void createSheet() {
+bool createSheet(string& sheetName) {
     bool fileStatus;
     do {
         cout << "Enter attendance sheet name: ";
@@ -363,6 +363,7 @@ void createSheet() {
     }
 
     cout << "\nSheet structure created successfully.\n\n";
+    return true;
 }
 
 // =============================
@@ -543,11 +544,11 @@ string trimDatabaseName(string& databaseName){
 // Create Database (folder)
 // =============================
 bool createDatabase(const string& databaseName){
-    if (!isValidDatabaseName(databaseName))){
+    if (!isValidDatabaseName(databaseName)){
         cout << "Error: Database name invalid. It may contains illegal characters (\\/:*?\"<>|.)" << endl;
         return false;
     }
-    databaseName = trimDatabaseName(databaseName);
+    string trimmedName = databaseName;
     fs::path relativePath(databaseName);
 
     // Error handling: Check duplication of databaseName
