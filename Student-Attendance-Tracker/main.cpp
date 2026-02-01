@@ -28,6 +28,8 @@
 #include <filesystem>
 #include <vector>
 #include <cstring>
+#include <thread>
+#include <chrono>
 using namespace std;
 
 namespace fs = std::filesystem;
@@ -65,8 +67,8 @@ void saveToCSV(string);
 bool isValidDatabaseName(const string&);
 string trimDatabaseName(string&);
 bool createDatabase(string&);
-void loadDatabase();
-void showDatabase();
+vector<string> loadDatabase();
+void showDatabase(const vector<string>&);
 void loadSheet();
 void showSheet();
 void loadRecord();
@@ -104,8 +106,13 @@ int main() {
 
         //LEVEL 1: Database Choice Input Validation + Process
         do {
-            //loadDatabase();
-            //showDatabase();
+            cout << "Loading database from system ...\n" << endl;
+            this_thread::sleep_for(chrono::seconds(2));
+
+            databaseList = loadDatabase();
+            cout << "Available Database:" << endl;
+            showDatabase(databaseList);
+
             cout << "Please select the database or create a new database: (Enter number) ";
             cin >> choiceDatabase;
             cin.ignore(1000, '\n');
@@ -141,8 +148,14 @@ int main() {
             } else if(choiceDatabaseInt == -2){
                 exitProgram = true;
                 break;
-            } else if(false){
-                //leave when loadDatabase() is done
+            } else if((choiceDatabaseInt - 1) >= 0 && choiceDatabaseInt < databaseList.size()){
+                for(int counterDatabase = 0; counterDatabase < databaseList.size(); counterDatabase++){
+                    if((choiceDatabaseInt - 1) == counterDatabase){
+                        currentDatabase = databaseList[counterDatabase];
+                        break;
+                    }
+                }
+                choiceDatabaseStatus = true;
             } else {
                 cout << "Error: Invalid choice. Please try again." << endl;
                 choiceDatabaseStatus = false;
@@ -155,6 +168,12 @@ int main() {
             //LEVEL 2: Sheet selection
             do {
                 exitDatabase = false;
+                cout << "Loading " << currentDatabase << " ...\n" << endl;
+                this_thread::sleep_for(chrono::seconds(2));
+
+                cout << "------------------------------------------------\n";
+                cout << "Database- " << currentDatabase << endl;
+                cout << "------------------------------------------------\n";
 
                 //LEVEL 2: Sheet Choice Input Validation + Process
                 do {
@@ -634,5 +653,26 @@ bool createDatabase(string& databaseName){
     } else {
         cout << "Error: Database failed to be created. Please try again." << endl;
         return false;
+    }
+}
+
+vector<string> loadDatabase() {
+
+    vector<string> databaseList;
+
+    if (fs::exists("Database") && fs::is_directory("Database")){
+        for (const auto& entry : fs::directory_iterator("Database")) {
+            if (entry.is_directory()) {
+                databaseList.push_back(entry.path().filename().string());
+            }
+        }
+    }
+
+    return databaseList;
+}
+
+void showDatabase(const vector<string> &databaseList){
+    for(int i = 0; i < databaseList.size(); i++){
+        cout << (i+1) << "- " << databaseList[i] << endl;
     }
 }
