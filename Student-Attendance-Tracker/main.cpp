@@ -27,6 +27,7 @@
 #include <iomanip>
 #include <filesystem>
 #include <vector>
+#include <cstring>
 using namespace std;
 
 namespace fs = std::filesystem;
@@ -56,14 +57,14 @@ bool isInteger(const string &value);
 bool isLabelStudentID(string);
 bool filenameExisted(string);
 bool isEmpty(string);
-void createSheet(); // do modification on this
+void createSheet(const string&);
 void insertRow();
 void printCentered(string, int);
 void displayCSV();
 void saveToCSV(string);
 bool isValidDatabaseName(const string&);
 string trimDatabaseName(string&);
-bool createDatabase(const string&);
+bool createDatabase(string&);
 void loadDatabase();
 void showDatabase();
 void loadSheet();
@@ -78,8 +79,10 @@ void deleteRecord();
 int main() {
 
     // Local variable initialization
-    int choiceDatabase, choiceSheet, choiceRecord;
-    int noOfDatabase, noOfSheet, noOfRecord;
+    int databaseCount, sheetCount, recordCount;
+    int choiceDatabaseInt, choiceSheetInt, choiceRecordInt;
+    string choiceDatabase, choiceSheet;
+    int choiceRecord;
     string databaseName;
     string sheetName;
     string currentDatabase, currentSheet;
@@ -87,6 +90,7 @@ int main() {
     bool exitProgram = false;
     bool exitDatabase = false;
     bool exitSheet = false;
+    bool newSheet = false;
     vector<string> databaseList;
     vector<string> sheetList;
 
@@ -97,16 +101,25 @@ int main() {
 
     //LEVEL 1: Database selection
     do {
-        //loadDatabase();
-        //showDatabase();
-        cout << "Please select the database or create a new database: ";
-        cin >> choiceDatabase;
-        cin.ignore(1000, '\n');
 
         //LEVEL 1: Database Choice Input Validation + Process
         do {
+            //loadDatabase();
+            //showDatabase();
+            cout << "Please select the database or create a new database: (Enter number) ";
+            cin >> choiceDatabase;
+            cin.ignore(1000, '\n');
+
+            if(!isInteger(choiceDatabase)){
+                cout << "Error: Choice must be an integer. Please try again." << endl;
+                choiceDatabaseStatus = false;
+                continue;
+            }
+
+            choiceDatabaseInt = stoi(choiceDatabase);
+
             choiceDatabaseStatus = true;
-            if(choiceDatabase == -1){
+            if(choiceDatabaseInt == -1){
                 do{
                     cout << "Enter database name: (Cannot contain illegal character:\\/:*?\"<>|)" << endl;
                     getline(cin, databaseName);
@@ -120,63 +133,90 @@ int main() {
                     createDatabaseStatus = createDatabase(databaseName);
                     if(createDatabaseStatus){
                         currentDatabase = databaseName;
+                        choiceDatabaseStatus = true;
                     }
 
                 } while (!createDatabaseStatus || !choiceDatabaseStatus);
 
-            } else if(choiceDatabase == -2){
+            } else if(choiceDatabaseInt == -2){
                 exitProgram = true;
                 break;
-            } else if(){
+            } else if(false){
                 //leave when loadDatabase() is done
             } else {
                 cout << "Error: Invalid choice. Please try again." << endl;
                 choiceDatabaseStatus = false;
             }
 
-        } while(!choiceDatabaseStatus);
+        } while(choiceDatabaseStatus == false);
 
-        if (choiceDatabase != -1 && choiceDatabase != -2){
+        if (choiceDatabaseInt != -2){
 
             //LEVEL 2: Sheet selection
             do {
-                //loadSheet();
-                //showSheet();
-                cout << "Please select the attendance sheet you want to update or create a new attendance sheet: ";
-                cin >> choiceSheet;
-                cin.ignore(1000, '\n');
+                exitDatabase = false;
 
                 //LEVEL 2: Sheet Choice Input Validation + Process
                 do {
-                    choiceSheetStatus = true;
-                    if(choiceSheet == -1){
+                    //loadSheet();
+                    //showSheet();
+                    cout << "Please select the attendance sheet you want to update or create a new attendance sheet: (Enter number) ";
+                    cin >> choiceSheet;
+                    cin.ignore(1000, '\n');
+
+                    if(!isInteger(choiceSheet)){
+                        cout << "Error: Choice must be an integer. Please try again." << endl;
+                        choiceSheetStatus = false;
+                        continue;
+                    }
+
+                    choiceSheetInt = stoi(choiceSheet);
+
+                    if(choiceSheetInt == -1){
                         do {
+                            choiceSheetStatus = true;
+                            createSheetStatus = false;
+
                             cout << "Enter sheet name: (Cannot contain illegal character:\\/:*?\"<>|)" << endl;
                             getline(cin, sheetName);
 
                             if(isEmpty(sheetName)){
                                 cout << "Error: Sheet name cannot be empty. Please try again." << endl;
-                                continue;
                                 choiceSheetStatus = false;
+                                continue;
                             }
 
-                            createSheetStatus = createSheet(sheetName);
+                            if(!isValidDatabaseName(sheetName)){
+                                cout << "Error: Sheet name invalid. It may contains illegal characters (\\/:*?\"<>|." << endl;
+                                continue;
+                            }
+
+                            if(!filenameExisted(currentDatabase + "/" + sheetName+".txt")){
+                                cout << "Error: The filename " << sheetName << " already existed.\n" << endl;
+                                continue;
+                            }
+
+                            createSheet(currentDatabase + "/" + sheetName + ".txt");
+                            createSheetStatus = true;
+                            newSheet = true;
 
                             if(createSheetStatus){
+                                cout << "\nAttendance sheet \"" << sheetName << "\" created successfully.\n\n";
                                 currentSheet = sheetName;
+                                break;
                             }
 
                         } while(!createSheetStatus || !choiceSheetStatus);
 
-                    } else if(choiceSheet == -2) {
+                    } else if(choiceSheetInt == -2) {
                         exitDatabase = true;
                         cout << "Exit from " << databaseName << " ..." << endl;
                         break;
-                    } else if(choiceSheet == -3)) {
+                    } else if(choiceSheetInt == -3) {
                         exitDatabase = true;
                         exitProgram = true;
                         break;
-                    } else if() {
+                    } else if(false) {
                         //leave when loadSheet() is done
                     } else {
                         cout << "Error: Invalid choice. Please try again." << endl;
@@ -185,11 +225,25 @@ int main() {
 
                 } while(!choiceSheetStatus);
 
-                if (choiceSheet != -1 && choiceSheet != -2 && choiceSheet != -3) {
+                if (choiceSheetInt != -2 && choiceSheetInt != -3) {
 
                     //LEVEL 3: Record selection
                     do {
-                        //TO-DO: Check if is new sheet, then directly prompt user to input new record as many as they want (as in m1)
+
+                        if(newSheet){
+                            char choice;
+                            do {
+                                insertRow();
+                                cout << "Insert another row? (Y/N): ";
+                                cin >> choice;
+                                cin.ignore();
+                                cout << "\n";
+                            } while (toupper(choice) == 'Y');
+
+                            saveToCSV(sheetName+".txt");
+                            newSheet = false;
+                        }
+
                         //loadRecord();
                         //displayCSV();
                         cout << "Action you can perform:" << endl;
@@ -198,7 +252,7 @@ int main() {
                         cout << "3- Delete Record" << endl;
                         cout << "4- Exit Attendance Sheet" << endl;
                         cout << "5- Exit The Program" << endl;
-                        cout << "Select the action you want to perform:";
+                        cout << "Select the action you want to perform: (enter number)";
                         cin >> choiceRecord;
                         cin.ignore(1000, '\n');
 
@@ -228,7 +282,8 @@ int main() {
                             }
 
                         } while(!choiceRecordStatus);
-                    }
+
+                    } while(!exitSheet);
 
                     currentSheet = "";
                 }
@@ -272,8 +327,21 @@ int main() {
 // Helper: Validate INT input
 // =============================
 bool isInteger(const string &value) {
-    for (char c : value) {
-        if (!isdigit(c)) return false;
+    if (value.empty())
+        return false;
+
+    int start = 0;
+
+    if (value[0] == '-') {
+        if (value.length() == 1)
+            return false;
+        start = 1;
+    }
+
+    for (int i = start; i < value.length(); i++) {
+        if (!isdigit(value[i])) {
+            return false;
+        }
     }
     return true;
 }
@@ -294,9 +362,8 @@ bool isLabelStudentID(string value) {
 // =============================
 // Helper: Validate filename existed
 // =============================
-bool filenameExisted(string fileName) {
-    if (fs::exists(fileName)){
-        cout << "Error: The filename " << sheetName << " already existed.\n" << endl;
+bool filenameExisted(string sheetName) {
+    if (fs::exists(sheetName)){
         return false;
     } else {
         cout << "\nAttendance sheet \"" << sheetName << "\" created successfully.\n\n";
@@ -317,15 +384,12 @@ bool isEmpty(string value) {
 // =============================
 // Create Attendance Sheet
 // =============================
-void createSheet() {
-    bool fileStatus;
-    do {
-        cout << "Enter attendance sheet name: ";
-        cin >> sheetName;
-        string fileName = sheetName+".txt";
+void createSheet(const string& sheetName) {
 
-        fileStatus = filenameExisted(fileName);
-    } while(fileStatus == false);
+    string fileName = sheetName+".txt";
+    cout << "-------------------------------------------\n";
+    cout << "Create Sheet Structure\n";
+    cout << "-------------------------------------------\n";
 
     // Number of columns
     do {
@@ -542,21 +606,29 @@ string trimDatabaseName(string& databaseName){
 // =============================
 // Create Database (folder)
 // =============================
-bool createDatabase(const string& databaseName){
-    if (!isValidDatabaseName(databaseName))){
+bool createDatabase(string& databaseName){
+    if (!isValidDatabaseName(databaseName)){
         cout << "Error: Database name invalid. It may contains illegal characters (\\/:*?\"<>|.)" << endl;
         return false;
     }
     databaseName = trimDatabaseName(databaseName);
-    fs::path relativePath(databaseName);
+
+    fs::path parentDir = "Database";
+    // Error handling: Check Database folder is exists
+    if (!fs::exists(parentDir)){
+        fs::create_directory(parentDir);
+    }
+
+    //Combine parent folder and database name
+    fs::path fullPath = parentDir / databaseName;
 
     // Error handling: Check duplication of databaseName
-    if (fs::exists(relativePath)){
+    if (fs::exists(fullPath)){
         cout << "Error: Database name already exists. Please give a different name." << endl;
         return false;
     }
 
-    if (fs::create_directory(relativePath)){
+    if (fs::create_directory(fullPath)){
         cout << "Database " << databaseName << " created successfully!" << endl;
         return true;
     } else {
