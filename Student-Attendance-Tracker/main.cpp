@@ -66,8 +66,8 @@ bool isEmpty(string);
 ColumnData createSheet(const string&);
 void insertRow(ColumnData&, AttendanceRecord&);
 void printCentered(string, int);
-void displayCSV(ColumnData&, AttendanceRecord&);
-void saveToCSV(const fs::path&, string&, ColumnData&, AttendanceRecord&);
+void showRecord(ColumnData&, AttendanceRecord&);
+void saveRecord(const fs::path&, string&, ColumnData&, AttendanceRecord&);
 bool isValidDatabaseName(const string&);
 string trimDatabaseName(string&);
 bool createDatabase(string&);
@@ -159,12 +159,8 @@ int main() {
                 exitProgram = true;
                 break;
             } else if((choiceDatabaseInt - 1) >= 0 && choiceDatabaseInt <= databaseList.size()){
-                for(int counterDatabase = 0; counterDatabase < databaseList.size(); counterDatabase++){
-                    if((choiceDatabaseInt - 1) == counterDatabase){
-                        currentDatabase = databaseList[counterDatabase];
-                        break;
-                    }
-                }
+                currentDatabase = databaseList[choiceDatabaseInt - 1];
+                databaseName = currentDatabase;
                 choiceDatabaseStatus = true;
             } else {
                 cout << "Error: Invalid choice. Please try again." << endl;
@@ -246,7 +242,7 @@ int main() {
 
                     } else if(choiceSheetInt == -2) {
                         exitDatabase = true;
-                        cout << "Exit from " << databaseName << " ..." << endl;
+                        cout << "\nExit from " << currentDatabase << " ...\n" << endl;
                         break;
                     } else if(choiceSheetInt == -3) {
                         exitDatabase = true;
@@ -284,12 +280,13 @@ int main() {
                                 cout << "\n";
                             } while (toupper(choice) == 'Y');
 
-                            saveToCSV((databasePath + "/" + sheetName+".txt"), sheetName, columnRecord, rowRecord);
+                            saveRecord((databasePath + "/" + sheetName+".txt"), sheetName, columnRecord, rowRecord);
                             newSheet = false;
                         }
 
+                        cout << endl;
                         // Display current data (Acts as the View function)
-                        displayCSV(columnRecord, rowRecord);
+                        showRecord(columnRecord, rowRecord);
 
                         cout << "Action you can perform:" << endl;
                         cout << "1- Insert New Record" << endl;
@@ -313,17 +310,17 @@ int main() {
                             case 1:
                             {
                                 insertRow(columnRecord, rowRecord);
-                                saveToCSV(databasePath + "/" + sheetName+".txt", sheetName, columnRecord, rowRecord);
+                                saveRecord(databasePath + "/" + sheetName+".txt", sheetName, columnRecord, rowRecord);
                                 break;
                             }
                             case 2:
                                 if(updateRecord(columnRecord, rowRecord)){
-                                    saveToCSV(databasePath + "/" + sheetName+".txt", sheetName, columnRecord, rowRecord);
+                                    saveRecord(databasePath + "/" + sheetName+".txt", sheetName, columnRecord, rowRecord);
                                 }
                                 break;
                             case 3:
                                 if(deleteRecord(columnRecord, rowRecord)){
-                                    saveToCSV(databasePath + "/" + sheetName+".txt", sheetName, columnRecord, rowRecord);
+                                    saveRecord(databasePath + "/" + sheetName+".txt", sheetName, columnRecord, rowRecord);
                                 }
                                 break;
                             case 4:
@@ -550,9 +547,9 @@ void printCentered(string text, int width) {
 // =============================
 // View sheet in CSV mode
 // =============================
-void displayCSV(ColumnData& column, AttendanceRecord& row) {
+void showRecord(ColumnData& column, AttendanceRecord& row) {
     cout << "-------------------------------------------\n";
-    cout << "View Attendance Sheet (CSV Mode)\n";
+    cout << "View Attendance Sheet\n";
     cout << "-------------------------------------------\n";
 
     int maxLength[column.columnCount];
@@ -592,7 +589,7 @@ void displayCSV(ColumnData& column, AttendanceRecord& row) {
 // =============================
 // Save to CSV File
 // =============================
-void saveToCSV(const fs::path& relPath, string& filename, ColumnData& column, AttendanceRecord& row) {
+void saveRecord(const fs::path& relPath, string& filename, ColumnData& column, AttendanceRecord& row) {
     ofstream file(relPath);
 
     if (!file.is_open()) {
