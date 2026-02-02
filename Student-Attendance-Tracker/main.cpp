@@ -73,14 +73,12 @@ string trimDatabaseName(string&);
 bool createDatabase(string&);
 vector<string> loadDatabase();
 void showDatabase(const vector<string>&);
-vector<string> loadSheet(const string& path);
-void showSheet(const vector<string>& sheets);
-
-// Updated Prototypes for Record Management
-int findIDColumn(ColumnData& colData); // New Helper
-void loadRecord(string fullPath, ColumnData& colData, AttendanceRecord& rowData);
-void updateRecord(ColumnData& colData, AttendanceRecord& rowData);
-void deleteRecord(ColumnData& colData, AttendanceRecord& rowData);
+vector<string> loadSheet(const string&);
+void showSheet(const vector<string>&);
+int findIDColumn(ColumnData&);
+void loadRecord(string, ColumnData&, AttendanceRecord&);
+bool updateRecord(ColumnData&, AttendanceRecord&);
+bool deleteRecord(ColumnData&, AttendanceRecord&);
 
 // =============================
 // MAIN PROGRAM
@@ -128,6 +126,7 @@ int main() {
 
             if(!isInteger(choiceDatabase)){
                 cout << "Error: Choice must be an integer. Please try again." << endl;
+                this_thread::sleep_for(chrono::seconds(1));
                 choiceDatabaseStatus = false;
                 continue;
             }
@@ -143,6 +142,7 @@ int main() {
 
                     if(isEmpty(databaseName)){
                         cout << "Error: Database name cannot be empty. Please try again." << endl;
+                        this_thread::sleep_for(chrono::seconds(1));
                         choiceDatabaseStatus = false;
                         continue;
                     }
@@ -168,6 +168,7 @@ int main() {
                 choiceDatabaseStatus = true;
             } else {
                 cout << "Error: Invalid choice. Please try again." << endl;
+                this_thread::sleep_for(chrono::seconds(1));
                 choiceDatabaseStatus = false;
             }
 
@@ -197,6 +198,7 @@ int main() {
 
                     if(!isInteger(choiceSheet)){
                         cout << "Error: Choice must be an integer. Please try again." << endl;
+                        this_thread::sleep_for(chrono::seconds(1));
                         choiceSheetStatus = false;
                         continue;
                     }
@@ -213,17 +215,20 @@ int main() {
 
                             if(isEmpty(sheetName)){
                                 cout << "Error: Sheet name cannot be empty. Please try again." << endl;
+                                this_thread::sleep_for(chrono::seconds(1));
                                 choiceSheetStatus = false;
                                 continue;
                             }
 
                             if(!isValidDatabaseName(sheetName)){
                                 cout << "Error: Sheet name invalid. It may contains illegal characters (\\/:*?\"<>|." << endl;
+                                this_thread::sleep_for(chrono::seconds(1));
                                 continue;
                             }
 
                             if(!filenameExisted(databasePath + "/" + sheetName+".txt")){
                                 cout << "Error: The filename " << sheetName << " already existed.\n" << endl;
+                                this_thread::sleep_for(chrono::seconds(1));
                                 continue;
                             }
 
@@ -258,6 +263,7 @@ int main() {
 
                     } else {
                         cout << "Error: Invalid choice. Please try again." << endl;
+                        this_thread::sleep_for(chrono::seconds(1));
                         choiceSheetStatus = false;
                     }
 
@@ -291,43 +297,46 @@ int main() {
                         cout << "3- Delete Record" << endl;
                         cout << "4- Exit Attendance Sheet" << endl;
                         cout << "5- Exit The Program" << endl;
-                        cout << "Select the action you want to perform: (enter number)";
-                        cin >> choiceRecord;
-                        cin.ignore(1000, '\n');
+                        cout << "Select the action you want to perform: (enter number) ";
+
+                        if(!(cin >> choiceRecord)){
+                            cout << "Error: Input must be an integer.\n";
+                            this_thread::sleep_for(chrono::seconds(1));
+                            cin.clear();
+                            cin.ignore(1000, '\n');
+                            continue; // Restart loop immediately
+                        }
+                        cin.ignore(1000,'\n');
 
                         //LEVEL 3: Record Choice Input Validation + Process
-                        do {
-                            choiceRecordStatus = true;
-                            switch(choiceRecord){
-                                case 1:
-                                {
-                                    //need to load also column.columnCount so that it is not empty
-                                    insertRow(columnRecord, rowRecord);
-                                    saveToCSV(databasePath + "/" + sheetName+".txt", sheetName, columnRecord, rowRecord);
-                                    break;
-                                }
-                                case 2:
-                                    updateRecord(columnRecord, rowRecord);
-                                    saveToCSV(databasePath + "/" + sheetName+".txt", sheetName, columnRecord, rowRecord);
-                                    break;
-                                case 3:
-                                    deleteRecord(columnRecord, rowRecord);
-                                    saveToCSV(databasePath + "/" + sheetName+".txt", sheetName, columnRecord, rowRecord);
-                                    break;
-                                case 4:
-                                    exitSheet = true;
-                                    choiceSheetStatus = false;
-                                    cout << "Exit from " << sheetName << " ..." << endl;
-                                    break;
-                                case 5:
-                                    exitSheet = exitDatabase = exitProgram = true;
-                                    break;
-                                default:
-                                    cout << "Error: Invalid choice. Please try again." << endl;
-                                    choiceRecordStatus = false;
+                        switch(choiceRecord){
+                            case 1:
+                            {
+                                insertRow(columnRecord, rowRecord);
+                                saveToCSV(databasePath + "/" + sheetName+".txt", sheetName, columnRecord, rowRecord);
+                                break;
                             }
-
-                        } while(!choiceRecordStatus);
+                            case 2:
+                                if(updateRecord(columnRecord, rowRecord)){
+                                    saveToCSV(databasePath + "/" + sheetName+".txt", sheetName, columnRecord, rowRecord);
+                                }
+                                break;
+                            case 3:
+                                if(deleteRecord(columnRecord, rowRecord)){
+                                    saveToCSV(databasePath + "/" + sheetName+".txt", sheetName, columnRecord, rowRecord);
+                                }
+                                break;
+                            case 4:
+                                exitSheet = true;
+                                cout << "Exit from " << sheetName << " ..." << endl;
+                                break;
+                            case 5:
+                                exitSheet = exitDatabase = exitProgram = true;
+                                break;
+                            default:
+                                cout << "Error: Invalid choice. Please try again." << endl;
+                                this_thread::sleep_for(chrono::seconds(1));
+                        }
 
                     } while(!exitSheet);
 
@@ -505,6 +514,7 @@ void insertRow(ColumnData& column, AttendanceRecord& row) {
                     break;
                 } else {
                     cout << "Error: Invalid INT value. Please enter a number.\n";
+                    this_thread::sleep_for(chrono::seconds(1));
                 }
             }
             else {
@@ -587,6 +597,7 @@ void saveToCSV(const fs::path& relPath, string& filename, ColumnData& column, At
 
     if (!file.is_open()) {
         cout << "Error: Unable to create CSV file.\n";
+        this_thread::sleep_for(chrono::seconds(1));
         return;
     }
 
@@ -843,13 +854,13 @@ void loadRecord(string fullPath, ColumnData& colData, AttendanceRecord& rowData)
 // =============================
 // Update Record Implementation
 // =============================
-void updateRecord(ColumnData& colData, AttendanceRecord& rowData) {
+bool updateRecord(ColumnData& colData, AttendanceRecord& rowData) {
     // 1. Find the ID Column automatically
     int idCol = findIDColumn(colData);
 
     if (idCol == -1) {
         cout << "Error: No Student ID column found. Cannot identify records.\n";
-        return;
+        return false;
     }
 
     string id;
@@ -874,22 +885,25 @@ void updateRecord(ColumnData& colData, AttendanceRecord& rowData) {
                 }
             }
             cout << "Update successful!\n";
-            return;
+            return true;
         }
     }
     cout << "ERROR: Student ID " << id << " not found!\n";
+    this_thread::sleep_for(chrono::seconds(1));
+    return false;
 }
 
 // =============================
 // Delete Record Implementation
 // =============================
-void deleteRecord(ColumnData& colData, AttendanceRecord& rowData) {
+bool deleteRecord(ColumnData& colData, AttendanceRecord& rowData) {
     // 1. Find the ID Column automatically
     int idCol = findIDColumn(colData);
 
     if (idCol == -1) {
         cout << "Error: No Student ID column found.\n";
-        return;
+        this_thread::sleep_for(chrono::seconds(1));
+        return false;
     }
 
     string id;
@@ -917,9 +931,14 @@ void deleteRecord(ColumnData& colData, AttendanceRecord& rowData) {
                 }
                 rowData.rowCount--;
                 cout << "Delete successful!\n";
+                return true;
+            } else {
+                cout << "Delete cancelled.\n";
+                return false;
             }
-            return;
         }
     }
     cout << "ERROR: Student ID " << id << " not found.\n";
+    this_thread::sleep_for(chrono::seconds(1));
+    return false;
 }
