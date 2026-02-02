@@ -874,8 +874,14 @@ bool updateRecord(ColumnData& colData, AttendanceRecord& rowData) {
                 if (j == idCol) continue;
 
                 string val;
-                cout << "Column: " << colData.columnNames[j] << " (Current: " << rowData.tableData[i][j] << "): ";
-                getline(cin, val);
+                do {
+                    cout << "Column: " << colData.columnNames[j] << " (Current: " << rowData.tableData[i][j] << "): ";
+                    getline(cin, val);
+
+                    if (isEmpty(val)) {
+                        cout << "Error: Input cannot be empty. Please try again.\n";
+                    }
+                } while (isEmpty(val));
 
                 if (val != "x" && val != "X") {
                     rowData.tableData[i][j] = val;
