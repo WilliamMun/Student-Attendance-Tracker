@@ -65,7 +65,7 @@ ColumnData createSheet(const string&);
 AttendanceRecord insertRow(ColumnData&);
 void printCentered(string, int);
 void displayCSV(ColumnData&, AttendanceRecord&);
-void saveToCSV(string, ColumnData&, AttendanceRecord&);
+void saveToCSV(fs::path&, string&, ColumnData&, AttendanceRecord&);
 bool isValidDatabaseName(const string&);
 string trimDatabaseName(string&);
 bool createDatabase(string&);
@@ -182,9 +182,9 @@ int main() {
 
                 //LEVEL 2: Sheet Choice Input Validation + Process
                 do {
-                    currentDatabase = "Database/" + currentDatabase;
+                    string pathDatabase = "Database/" + currentDatabase;
 
-                    sheetList = loadSheet(currentDatabase);
+                    sheetList = loadSheet(pathDatabase);
                     showSheet(sheetList);
                     cout << "Please select the attendance sheet you want to update or create a new attendance sheet: (Enter number) ";
                     cin >> choiceSheet;
@@ -275,11 +275,13 @@ int main() {
                                 rowRecord = insertRow(columnRecord);
                                 cout << "Insert another row? (Y/N): ";
                                 cin >> choice;
-                                cin.ignore();
+                                cin.ignore(1000, '\n');
                                 cout << "\n";
                             } while (toupper(choice) == 'Y');
 
-                            saveToCSV(sheetName+".txt", columnRecord, rowRecord);
+                            fs::path fullPath = "Database/" + currentDatabase + "/" + sheetName + ".txt";
+                            cout << fullPath << endl;
+                            saveToCSV(fullPath, sheetName, columnRecord, rowRecord);
                             newSheet = false;
                         }
 
@@ -300,8 +302,13 @@ int main() {
                             choiceRecordStatus = true;
                             switch(choiceRecord){
                                 case 1:
+                                {
+                                    //need to load also column.columnCount so that it is not empty
                                     rowRecord = insertRow(columnRecord);
+                                    fs::path fullPath = "Database/" + currentDatabase + "/" + sheetName + ".txt";
+                                    saveToCSV(fullPath, sheetName, columnRecord, rowRecord);
                                     break;
+                                }
                                 case 2:
                                     //updateRecord();
                                     break;
@@ -586,8 +593,8 @@ void displayCSV(ColumnData& column, AttendanceRecord& row) {
 // =============================
 // Save to CSV File
 // =============================
-void saveToCSV(string filename, ColumnData& column, AttendanceRecord& row) {
-    ofstream file(filename);
+void saveToCSV(fs::path& relPath, string& filename, ColumnData& column, AttendanceRecord& row) {
+    ofstream file(relPath);
 
     if (!file.is_open()) {
         cout << "Error: Unable to create CSV file.\n";
