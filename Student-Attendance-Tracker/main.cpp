@@ -242,8 +242,14 @@ int main() {
                         exitDatabase = true;
                         exitProgram = true;
                         break;
-                    } else if(false) {
-                        //leave when loadSheet() is done
+                    } else if((choiceSheetInt - 1) >= 0 && choiceSheetInt <= sheetList.size()){
+                        for(int counterSheet = 0; counterSheet < sheetList.size(); counterSheet++){
+                            if((choiceSheetInt - 1) == counterSheet){
+                                currentSheet = sheetList[counterSheet];
+                                break;
+                            }
+                        }
+                        choiceSheetStatus = true;
                     } else {
                         cout << "Error: Invalid choice. Please try again." << endl;
                         choiceSheetStatus = false;
@@ -255,6 +261,13 @@ int main() {
 
                     //LEVEL 3: Record selection
                     do {
+
+                        cout << "\nLoading " << currentSheet << " ...\n" << endl;
+                        this_thread::sleep_for(chrono::seconds(2));
+
+                        cout << "------------------------------------------------\n";
+                        cout << "Attendance Sheet- " << currentSheet << endl;
+                        cout << "------------------------------------------------\n";
 
                         if(newSheet){
                             char choice;
