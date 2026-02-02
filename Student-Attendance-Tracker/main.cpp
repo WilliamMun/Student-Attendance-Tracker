@@ -41,16 +41,18 @@ namespace fs = std::filesystem;
 const int MAX_COLS = 10;
 const int MAX_ROWS = 2000;
 
-// Global variables for sheet structure
-string sheetName;
-int columnCount;
-string columnNames[MAX_COLS];
-string columnTypes[MAX_COLS];  // INT or TEXT
-string columnDescription[MAX_COLS];
+// Structure variable
+struct ColumnData{
+    int columnCount;
+    string columnNames[MAX_COLS];
+    string columnTypes[MAX_COLS];  // INT or TEXT
+    string columnDescription[MAX_COLS];
+};
 
-// Attendance data storage
-string tableData[MAX_ROWS][MAX_COLS];
-int rowCount = 0;
+struct AttendanceRecord{
+    string tableData[MAX_ROWS][MAX_COLS];
+    int rowCount = 0;
+};
 
 // =============================
 // Function Prototype
@@ -59,11 +61,11 @@ bool isInteger(const string &value);
 bool isLabelStudentID(string);
 bool filenameExisted(string);
 bool isEmpty(string);
-void createSheet(const string&);
-void insertRow();
+ColumnData createSheet(const string&);
+AttendanceRecord insertRow(ColumnData&);
 void printCentered(string, int);
-void displayCSV();
-void saveToCSV(string);
+void displayCSV(ColumnData&, AttendanceRecord&);
+void saveToCSV(string, ColumnData&, AttendanceRecord&);
 bool isValidDatabaseName(const string&);
 string trimDatabaseName(string&);
 bool createDatabase(string&);
@@ -95,6 +97,8 @@ int main() {
     bool newSheet = false;
     vector<string> databaseList;
     vector<string> sheetList;
+    ColumnData columnRecord;
+    AttendanceRecord rowRecord;
 
     cout << "===========================================\n";
     cout << "  STUDENT ATTENDANCE TRACKER - MILESTONE 2\n";
@@ -168,7 +172,7 @@ int main() {
             //LEVEL 2: Sheet selection
             do {
                 exitDatabase = false;
-                cout << "Loading " << currentDatabase << " ...\n" << endl;
+                cout << "\nLoading " << currentDatabase << " ...\n" << endl;
                 this_thread::sleep_for(chrono::seconds(2));
 
                 cout << "------------------------------------------------\n";
@@ -215,7 +219,7 @@ int main() {
                                 continue;
                             }
 
-                            createSheet(currentDatabase + "/" + sheetName + ".txt");
+                            columnRecord = createSheet(currentDatabase + "/" + sheetName + ".txt");
                             createSheetStatus = true;
                             newSheet = true;
 
@@ -252,14 +256,14 @@ int main() {
                         if(newSheet){
                             char choice;
                             do {
-                                insertRow();
+                                rowRecord = insertRow(columnRecord);
                                 cout << "Insert another row? (Y/N): ";
                                 cin >> choice;
                                 cin.ignore();
                                 cout << "\n";
                             } while (toupper(choice) == 'Y');
 
-                            saveToCSV(sheetName+".txt");
+                            saveToCSV(sheetName+".txt", columnRecord, rowRecord);
                             newSheet = false;
                         }
 
@@ -280,7 +284,7 @@ int main() {
                             choiceRecordStatus = true;
                             switch(choiceRecord){
                                 case 1:
-                                    insertRow();
+                                    rowRecord = insertRow(columnRecord);
                                     break;
                                 case 2:
                                     //updateRecord();
@@ -403,9 +407,11 @@ bool isEmpty(string value) {
 // =============================
 // Create Attendance Sheet
 // =============================
-void createSheet(const string& sheetName) {
+ColumnData createSheet(const string& sheetName) {
 
     string fileName = sheetName+".txt";
+    ColumnData record;
+
     cout << "-------------------------------------------\n";
     cout << "Create Sheet Structure\n";
     cout << "-------------------------------------------\n";
@@ -413,68 +419,73 @@ void createSheet(const string& sheetName) {
     // Number of columns
     do {
         cout << "Define number of columns (max 10): ";
-        cin >> columnCount;
-        if (columnCount < 1 || columnCount > MAX_COLS) {
+        cin >> record.columnCount;
+        if (record.columnCount < 1 || record.columnCount > MAX_COLS) {
             cout << "Error: Invalid number of columns.\n";
         }
-    } while (columnCount < 1 || columnCount > MAX_COLS);
+    } while (record.columnCount < 1 || record.columnCount > MAX_COLS);
 
     cin.ignore(); // Clear buffer
 
     // Enter column names and types
-    for (int i = 0; i < columnCount; i++) {
+    for (int i = 0; i < record.columnCount; i++) {
         do {
             cout << "Enter column " << i + 1 << " name: ";
-            getline(cin, columnNames[i]);
+            getline(cin, record.columnNames[i]);
 
-            if (isEmpty(columnNames[i]))
+            if (isEmpty(record.columnNames[i]))
                 cout << "Error: Input cannot be empty.\n";
-        } while (isEmpty(columnNames[i]));
+        } while (isEmpty(record.columnNames[i]));
 
-        if (isLabelStudentID(columnNames[i]))
-            columnTypes[i] = "INT";
+        if (isLabelStudentID(record.columnNames[i]))
+            record.columnTypes[i] = "INT";
         else
-            columnTypes[i] = "TEXT";
+            record.columnTypes[i] = "TEXT";
 
         do {
             cout << "Enter column " << i + 1 << " description (enter x if you want to leave it blank):" << endl;
-            getline(cin, columnDescription[i]);
+            getline(cin, record.columnDescription[i]);
 
-            if (isEmpty(columnDescription[i]))
+            if (isEmpty(record.columnDescription[i]))
                 cout << "Error: Input cannot be empty.\n";
-        } while (isEmpty(columnDescription[i]));
+        } while (isEmpty(record.columnDescription[i]));
     }
 
     cout << "\nSheet structure created successfully.\n\n";
+
+    return record;
 }
 
 // =============================
 // Insert a row
 // =============================
-void insertRow() {
-    if (rowCount >= MAX_ROWS) {
-        cout << "Error: Maximum row limit reached.\n";
-        return;
-    }
+AttendanceRecord insertRow(ColumnData& column) {
+
+    AttendanceRecord row;
+    do{
+        if (row.rowCount >= MAX_ROWS) {
+            cout << "Error: Maximum row limit reached.\n";
+        }
+    } while(row.rowCount >= MAX_ROWS);
 
     cout << "-------------------------------------------\n";
     cout << "Insert New Attendance Row\n";
     cout << "-------------------------------------------\n";
 
-    for (int col = 0; col < columnCount; col++) {
+    for (int col = 0; col < column.columnCount; col++) {
         string value;
 
         while (true) {
-            if(columnDescription[col] == "x" || columnDescription[col] == "X")
-                cout << "Enter " << columnNames[col] << " (" << columnTypes[col] << "): ";
+            if(column.columnDescription[col] == "x" || column.columnDescription[col] == "X")
+                cout << "Enter " << column.columnNames[col] << " (" << column.columnTypes[col] << "): ";
             else
-                cout << "Enter " << columnNames[col] << " (" << columnTypes[col] << ")" << " [" << columnDescription[col] << "]"  ": ";
+                cout << "Enter " << column.columnNames[col] << " (" << column.columnTypes[col] << ")" << " [" << column.columnDescription[col] << "]"  ": ";
             getline(cin, value);
 
             // INT validation
-            if (columnTypes[col] == "INT") {
+            if (column.columnTypes[col] == "INT") {
                 if (isInteger(value)) {
-                    tableData[rowCount][col] = value;
+                    row.tableData[row.rowCount][col] = value;
                     break;
                 } else {
                     cout << "Error: Invalid INT value. Please enter a number.\n";
@@ -482,14 +493,17 @@ void insertRow() {
             }
             else {
                 // TEXT -> no validation needed
-                tableData[rowCount][col] = value;
+                row.tableData[row.rowCount][col] = value;
                 break;
             }
         }
     }
 
-    rowCount++;
+    row.rowCount++;
+
     cout << "Row inserted successfully.\n\n";
+
+    return row;
 }
 
 // =============================
@@ -512,19 +526,19 @@ void printCentered(string text, int width) {
 // =============================
 // View sheet in CSV mode
 // =============================
-void displayCSV() {
+void displayCSV(ColumnData& column, AttendanceRecord& row) {
     cout << "-------------------------------------------\n";
     cout << "View Attendance Sheet (CSV Mode)\n";
     cout << "-------------------------------------------\n";
 
-    int maxLength[columnCount];
+    int maxLength[column.columnCount];
 
-    for (int j = 0; j < columnCount; j++) {
-        maxLength[j] = columnNames[j].length();
+    for (int j = 0; j < column.columnCount; j++) {
+        maxLength[j] = column.columnNames[j].length();
 
-        for (int k = 0; k < rowCount; k++) {
+        for (int k = 0; k < row.rowCount; k++) {
             // Use a temporary trimmed string for length checking
-            string temp = tableData[k][j];
+            string temp = row.tableData[k][j];
             temp.erase(temp.find_last_not_of(" ") + 1);
             if (temp.length() > (size_t)maxLength[j]){
                 maxLength[j] = temp.length();
@@ -533,17 +547,17 @@ void displayCSV() {
     }
 
     // Print column headers
-    for (int i = 0; i < columnCount; i++) {
-        printCentered(columnNames[i], maxLength[i]);
-        if (i < columnCount - 1) cout << " , ";
+    for (int i = 0; i < column.columnCount; i++) {
+        printCentered(column.columnNames[i], maxLength[i]);
+        if (i < column.columnCount - 1) cout << " , ";
     }
     cout << "\n";
 
     // Print rows
-    for (int r = 0; r < rowCount; r++) {
-        for (int c = 0; c < columnCount; c++) {
-            printCentered(tableData[r][c], maxLength[c]);
-            if (c < columnCount - 1) cout << " , ";
+    for (int r = 0; r < row.rowCount; r++) {
+        for (int c = 0; c < column.columnCount; c++) {
+            printCentered(row.tableData[r][c], maxLength[c]);
+            if (c < column.columnCount - 1) cout << " , ";
         }
         cout << "\n";
     }
@@ -554,7 +568,7 @@ void displayCSV() {
 // =============================
 // Save to CSV File
 // =============================
-void saveToCSV(string filename) {
+void saveToCSV(string filename, ColumnData& column, AttendanceRecord& row) {
     ofstream file(filename);
 
     if (!file.is_open()) {
@@ -563,24 +577,24 @@ void saveToCSV(string filename) {
     }
 
     // Write headers
-    for (int i = 0; i < columnCount; i++) {
-        file << columnNames[i];
-        if (i < columnCount - 1) file << ",";
+    for (int i = 0; i < column.columnCount; i++) {
+        file << column.columnNames[i];
+        if (i < column.columnCount - 1) file << ",";
     }
     file << "\n";
 
     // Write descriptions
-    for (int i = 0; i < columnCount; i++) {
-        file << columnDescription[i];
-        if (i < columnCount - 1) file << ",";
+    for (int i = 0; i < column.columnCount; i++) {
+        file << column.columnDescription[i];
+        if (i < column.columnCount - 1) file << ",";
     }
     file << "\n";
 
     // Write rows
-    for (int r = 0; r < rowCount; r++) {
-        for (int c = 0; c < columnCount; c++) {
-            file << tableData[r][c];
-            if (c < columnCount - 1) file << ",";
+    for (int r = 0; r < row.rowCount; r++) {
+        for (int c = 0; c < column.columnCount; c++) {
+            file << row.tableData[r][c];
+            if (c < column.columnCount - 1) file << ",";
         }
         file << "\n";
     }
@@ -675,4 +689,6 @@ void showDatabase(const vector<string> &databaseList){
     for(int i = 0; i < databaseList.size(); i++){
         cout << (i+1) << "- " << databaseList[i] << endl;
     }
+    cout << "-1- Create New Database" << endl;
+    cout << "-2- Exit the Program" << endl;
 }
