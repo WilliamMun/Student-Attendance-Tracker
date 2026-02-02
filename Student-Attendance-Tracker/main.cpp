@@ -67,7 +67,7 @@ ColumnData createSheet(const string&);
 AttendanceRecord insertRow(ColumnData&);
 void printCentered(string, int);
 void displayCSV(ColumnData&, AttendanceRecord&);
-void saveToCSV(string, ColumnData&, AttendanceRecord&);
+void saveToCSV(const fs::path&, string&, ColumnData&, AttendanceRecord&);
 bool isValidDatabaseName(const string&);
 string trimDatabaseName(string&);
 bool createDatabase(string&);
@@ -274,11 +274,11 @@ int main() {
                                 rowRecord = insertRow(columnRecord);
                                 cout << "Insert another row? (Y/N): ";
                                 cin >> choice;
-                                cin.ignore();
+                                cin.ignore(1000, '\n');
                                 cout << "\n";
                             } while (toupper(choice) == 'Y');
 
-                            saveToCSV(databasePath + "/" + sheetName+".txt", columnRecord, rowRecord);
+                            saveToCSV((databasePath + "/" + sheetName+".txt"), sheetName, columnRecord, rowRecord);
                             newSheet = false;
                         }
 
@@ -300,16 +300,19 @@ int main() {
                             choiceRecordStatus = true;
                             switch(choiceRecord){
                                 case 1:
+                                {
+                                    //need to load also column.columnCount so that it is not empty
                                     rowRecord = insertRow(columnRecord);
-                                    saveToCSV(databasePath + "/" + sheetName+".txt", columnRecord, rowRecord);
+                                    saveToCSV(databasePath + "/" + sheetName+".txt", sheetName, columnRecord, rowRecord);
                                     break;
+                                }
                                 case 2:
                                     updateRecord(columnRecord, rowRecord);
-                                    saveToCSV(databasePath + "/" + sheetName+".txt", columnRecord, rowRecord);
+                                    saveToCSV(databasePath + "/" + sheetName+".txt", sheetName, columnRecord, rowRecord);
                                     break;
                                 case 3:
                                     deleteRecord(columnRecord, rowRecord);
-                                    saveToCSV(databasePath + "/" + sheetName+".txt", columnRecord, rowRecord);
+                                    saveToCSV(databasePath + "/" + sheetName+".txt", sheetName, columnRecord, rowRecord);
                                     break;
                                 case 4:
                                     exitSheet = true;
@@ -430,13 +433,16 @@ ColumnData createSheet(const string& sheetName) {
     // Number of columns
     do {
         cout << "Define number of columns (max 10): ";
-        cin >> record.columnCount;
+        if(!(cin >> record.columnCount)){
+            cin.clear();
+            cin.ignore(1000, '\n');
+        }
         if (record.columnCount < 1 || record.columnCount > MAX_COLS) {
             cout << "Error: Invalid number of columns.\n";
         }
     } while (record.columnCount < 1 || record.columnCount > MAX_COLS);
 
-    cin.ignore(); // Clear buffer
+    cin.ignore(1000, '\n'); // Clear buffer
 
     // Enter column names and types
     for (int i = 0; i < record.columnCount; i++) {
@@ -579,8 +585,8 @@ void displayCSV(ColumnData& column, AttendanceRecord& row) {
 // =============================
 // Save to CSV File
 // =============================
-void saveToCSV(string filename, ColumnData& column, AttendanceRecord& row) {
-    ofstream file(filename);
+void saveToCSV(const fs::path& relPath, string& filename, ColumnData& column, AttendanceRecord& row) {
+    ofstream file(relPath, ios::app);
 
     if (!file.is_open()) {
         cout << "Error: Unable to create CSV file.\n";
