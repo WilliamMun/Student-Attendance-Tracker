@@ -64,7 +64,7 @@ bool isLabelStudentID(string);
 bool filenameExisted(string);
 bool isEmpty(string);
 ColumnData createSheet(const string&);
-AttendanceRecord insertRow(ColumnData&);
+void insertRow(ColumnData&, AttendanceRecord&);
 void printCentered(string, int);
 void displayCSV(ColumnData&, AttendanceRecord&);
 void saveToCSV(const fs::path&, string&, ColumnData&, AttendanceRecord&);
@@ -271,7 +271,7 @@ int main() {
                         if(newSheet){
                             char choice;
                             do {
-                                rowRecord = insertRow(columnRecord);
+                                insertRow(columnRecord, rowRecord);
                                 cout << "Insert another row? (Y/N): ";
                                 cin >> choice;
                                 cin.ignore(1000, '\n');
@@ -302,7 +302,7 @@ int main() {
                                 case 1:
                                 {
                                     //need to load also column.columnCount so that it is not empty
-                                    rowRecord = insertRow(columnRecord);
+                                    insertRow(columnRecord, rowRecord);
                                     saveToCSV(databasePath + "/" + sheetName+".txt", sheetName, columnRecord, rowRecord);
                                     break;
                                 }
@@ -476,9 +476,8 @@ ColumnData createSheet(const string& sheetName) {
 // =============================
 // Insert a row
 // =============================
-AttendanceRecord insertRow(ColumnData& column) {
+void insertRow(ColumnData& column, AttendanceRecord& row) {
 
-    AttendanceRecord row;
     do{
         if (row.rowCount >= MAX_ROWS) {
             cout << "Error: Maximum row limit reached.\n";
@@ -519,8 +518,6 @@ AttendanceRecord insertRow(ColumnData& column) {
     row.rowCount++;
 
     cout << "Row inserted successfully.\n\n";
-
-    return row;
 }
 
 // =============================
@@ -586,7 +583,7 @@ void displayCSV(ColumnData& column, AttendanceRecord& row) {
 // Save to CSV File
 // =============================
 void saveToCSV(const fs::path& relPath, string& filename, ColumnData& column, AttendanceRecord& row) {
-    ofstream file(relPath, ios::app);
+    ofstream file(relPath);
 
     if (!file.is_open()) {
         cout << "Error: Unable to create CSV file.\n";
