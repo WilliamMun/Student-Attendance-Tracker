@@ -153,7 +153,7 @@ int main() {
             } else if(choiceDatabaseInt == -2){
                 exitProgram = true;
                 break;
-            } else if((choiceDatabaseInt - 1) >= 0 && choiceDatabaseInt < databaseList.size()){
+            } else if((choiceDatabaseInt - 1) >= 0 && choiceDatabaseInt <= databaseList.size()){
                 for(int counterDatabase = 0; counterDatabase < databaseList.size(); counterDatabase++){
                     if((choiceDatabaseInt - 1) == counterDatabase){
                         currentDatabase = databaseList[counterDatabase];
@@ -182,7 +182,7 @@ int main() {
 
                 //LEVEL 2: Sheet Choice Input Validation + Process
                 do {
-                    string currentDatabase = "Database/" + databaseName;
+                    currentDatabase = "Database/" + currentDatabase;
 
                     sheetList = loadSheet(currentDatabase);
                     showSheet(sheetList);
