@@ -71,8 +71,8 @@ string trimDatabaseName(string&);
 bool createDatabase(string&);
 vector<string> loadDatabase();
 void showDatabase(const vector<string>&);
-void loadSheet();
-void showSheet();
+vector<string> loadSheet(const string& path);
+void showSheet(const vector<string>& sheets);
 void loadRecord();
 void updateRecord();
 void deleteRecord();
@@ -127,6 +127,7 @@ int main() {
                 continue;
             }
 
+
             choiceDatabaseInt = stoi(choiceDatabase);
 
             choiceDatabaseStatus = true;
@@ -152,7 +153,7 @@ int main() {
             } else if(choiceDatabaseInt == -2){
                 exitProgram = true;
                 break;
-            } else if((choiceDatabaseInt - 1) >= 0 && choiceDatabaseInt < databaseList.size()){
+            } else if((choiceDatabaseInt - 1) >= 0 && choiceDatabaseInt <= databaseList.size()){
                 for(int counterDatabase = 0; counterDatabase < databaseList.size(); counterDatabase++){
                     if((choiceDatabaseInt - 1) == counterDatabase){
                         currentDatabase = databaseList[counterDatabase];
@@ -181,8 +182,10 @@ int main() {
 
                 //LEVEL 2: Sheet Choice Input Validation + Process
                 do {
-                    //loadSheet();
-                    //showSheet();
+                    currentDatabase = "Database/" + currentDatabase;
+
+                    sheetList = loadSheet(currentDatabase);
+                    showSheet(sheetList);
                     cout << "Please select the attendance sheet you want to update or create a new attendance sheet: (Enter number) ";
                     cin >> choiceSheet;
                     cin.ignore(1000, '\n');
@@ -294,6 +297,7 @@ int main() {
                                     break;
                                 case 4:
                                     exitSheet = true;
+                                    choiceSheetStatus = false;
                                     cout << "Exit from " << sheetName << " ..." << endl;
                                     break;
                                 case 5:
@@ -308,6 +312,7 @@ int main() {
 
                     } while(!exitSheet);
 
+                    exitSheet = false;
                     currentSheet = "";
                 }
 
@@ -668,6 +673,38 @@ bool createDatabase(string& databaseName){
         cout << "Error: Database failed to be created. Please try again." << endl;
         return false;
     }
+}
+
+// Load Sheet in Database
+vector<string> loadSheet(const string& path) {
+    vector<string> sheetList;
+
+    if (!fs::exists(path)) {
+        cout << "Error: Database folder not found.\n";
+        return sheetList;
+    }
+
+    for (const auto& entry : fs::directory_iterator(path)) {
+        if (entry.is_regular_file() && entry.path().extension() == ".txt") {
+            sheetList.push_back(entry.path().stem().string());
+        }
+    }
+
+    sort(sheetList.begin(), sheetList.end());
+    return sheetList;
+}
+
+//Show Sheet in Database
+void showSheet(const vector<string>& sheets) {
+    int index = 1;
+
+    for (const auto& sheet : sheets) {
+        cout << index++ << "- " << sheet << ".txt" << endl;
+    }
+
+    cout << "-1- Create New Sheet" << endl;
+    cout << "-2- Exit the Database" << endl;
+    cout << "-3- Exit the Program" << endl;
 }
 
 vector<string> loadDatabase() {
