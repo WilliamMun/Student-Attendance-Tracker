@@ -4,7 +4,7 @@
 // Lecture Class: TC1L
 // Tutorial Class: TT1L
 // Trimester: 2530
-// Member_1: 252UC2431W | MUN WILLIAM    | MUN.WILLIAM1@STUDENT.MMU.EDU.MY    | 010-830 7571
+// Member_1: 252UC2431W | MUN WILLIAM     | MUN.WILLIAM1@STUDENT.MMU.EDU.MY     | 010-830 7571
 // Member_2: 252UC242ZA | WONG QIAN XIAN | WONG.QIAN.XIAN1@STUDENT.MMU.EDU.MY | 011-1098 2661
 // Member_3: 252UC241W5 | KONG ZHUN RUI  | KONG.ZHUN.RUI1@STUDENT.MMU.EDU.MY  | 012-916 2693
 // Member_4: 252UC241TT | ONG ZHONG YIK  | ONG.ZHONG.YIK1@STUDENT.MMU.EDU.MY  | 011-5990 6040
@@ -30,6 +30,8 @@
 #include <cstring>
 #include <thread>
 #include <chrono>
+#include <sstream> // Required for CSV parsing
+
 using namespace std;
 
 namespace fs = std::filesystem;
@@ -73,9 +75,12 @@ vector<string> loadDatabase();
 void showDatabase(const vector<string>&);
 vector<string> loadSheet(const string& path);
 void showSheet(const vector<string>& sheets);
-void loadRecord();
-void updateRecord();
-void deleteRecord();
+
+// Updated Prototypes for Record Management
+int findIDColumn(ColumnData& colData); // New Helper
+void loadRecord(string fullPath, ColumnData& colData, AttendanceRecord& rowData);
+void updateRecord(ColumnData& colData, AttendanceRecord& rowData);
+void deleteRecord(ColumnData& colData, AttendanceRecord& rowData);
 
 // =============================
 // MAIN PROGRAM
@@ -83,7 +88,7 @@ void deleteRecord();
 int main() {
 
     // Local variable initialization
-    int databaseCount, sheetCount, recordCount;
+    int databaseCount, sheetCount;
     int choiceDatabaseInt, choiceSheetInt, choiceRecordInt;
     string choiceDatabase, choiceSheet;
     int choiceRecord;
@@ -111,7 +116,7 @@ int main() {
         //LEVEL 1: Database Choice Input Validation + Process
         do {
             cout << "Loading database from system ...\n" << endl;
-            this_thread::sleep_for(chrono::seconds(2));
+            this_thread::sleep_for(chrono::seconds(1));
 
             databaseList = loadDatabase();
             cout << "Available Database:" << endl;
@@ -171,10 +176,12 @@ int main() {
         if (choiceDatabaseInt != -2){
 
             //LEVEL 2: Sheet selection
+            string databasePath = "Database/" + currentDatabase;
+
             do {
                 exitDatabase = false;
                 cout << "\nLoading " << currentDatabase << " ...\n" << endl;
-                this_thread::sleep_for(chrono::seconds(2));
+                this_thread::sleep_for(chrono::seconds(1));
 
                 cout << "------------------------------------------------\n";
                 cout << "Database- " << currentDatabase << endl;
@@ -182,9 +189,7 @@ int main() {
 
                 //LEVEL 2: Sheet Choice Input Validation + Process
                 do {
-                    currentDatabase = "Database/" + currentDatabase;
-
-                    sheetList = loadSheet(currentDatabase);
+                    sheetList = loadSheet(databasePath);
                     showSheet(sheetList);
                     cout << "Please select the attendance sheet you want to update or create a new attendance sheet: (Enter number) ";
                     cin >> choiceSheet;
@@ -217,12 +222,12 @@ int main() {
                                 continue;
                             }
 
-                            if(!filenameExisted(currentDatabase + "/" + sheetName+".txt")){
+                            if(!filenameExisted(databasePath + "/" + sheetName+".txt")){
                                 cout << "Error: The filename " << sheetName << " already existed.\n" << endl;
                                 continue;
                             }
 
-                            columnRecord = createSheet(currentDatabase + "/" + sheetName + ".txt");
+                            columnRecord = createSheet(databasePath + "/" + sheetName + ".txt");
                             createSheetStatus = true;
                             newSheet = true;
 
@@ -242,14 +247,15 @@ int main() {
                         exitDatabase = true;
                         exitProgram = true;
                         break;
-                    } else if((choiceSheetInt - 1) >= 0 && choiceSheetInt <= sheetList.size()){
-                        for(int counterSheet = 0; counterSheet < sheetList.size(); counterSheet++){
-                            if((choiceSheetInt - 1) == counterSheet){
-                                currentSheet = sheetList[counterSheet];
-                                break;
-                            }
-                        }
+                    } else if((choiceSheetInt - 1) >= 0 && choiceSheetInt <= sheetList.size()) {
+                        // Logic for selecting an EXISTING sheet
+                        currentSheet = sheetList[choiceSheetInt - 1];
+                        sheetName = currentSheet;
                         choiceSheetStatus = true;
+
+                        // Load existing data immediately
+                        loadRecord(databasePath + "/" + sheetName + ".txt", columnRecord, rowRecord);
+
                     } else {
                         cout << "Error: Invalid choice. Please try again." << endl;
                         choiceSheetStatus = false;
@@ -262,13 +268,6 @@ int main() {
                     //LEVEL 3: Record selection
                     do {
 
-                        cout << "\nLoading " << currentSheet << " ...\n" << endl;
-                        this_thread::sleep_for(chrono::seconds(2));
-
-                        cout << "------------------------------------------------\n";
-                        cout << "Attendance Sheet- " << currentSheet << endl;
-                        cout << "------------------------------------------------\n";
-
                         if(newSheet){
                             char choice;
                             do {
@@ -279,12 +278,13 @@ int main() {
                                 cout << "\n";
                             } while (toupper(choice) == 'Y');
 
-                            saveToCSV(sheetName+".txt", columnRecord, rowRecord);
+                            saveToCSV(databasePath + "/" + sheetName+".txt", columnRecord, rowRecord);
                             newSheet = false;
                         }
 
-                        //loadRecord();
-                        //displayCSV();
+                        // Display current data (Acts as the View function)
+                        displayCSV(columnRecord, rowRecord);
+
                         cout << "Action you can perform:" << endl;
                         cout << "1- Insert New Record" << endl;
                         cout << "2- Update Current Record" << endl;
@@ -301,12 +301,15 @@ int main() {
                             switch(choiceRecord){
                                 case 1:
                                     rowRecord = insertRow(columnRecord);
+                                    saveToCSV(databasePath + "/" + sheetName+".txt", columnRecord, rowRecord);
                                     break;
                                 case 2:
-                                    //updateRecord();
+                                    updateRecord(columnRecord, rowRecord);
+                                    saveToCSV(databasePath + "/" + sheetName+".txt", columnRecord, rowRecord);
                                     break;
                                 case 3:
-                                    //deleteRecord();
+                                    deleteRecord(columnRecord, rowRecord);
+                                    saveToCSV(databasePath + "/" + sheetName+".txt", columnRecord, rowRecord);
                                     break;
                                 case 4:
                                     exitSheet = true;
@@ -340,29 +343,6 @@ int main() {
 
     return 0;
 }
-
-/* Milestone 1 Code:
-    createSheet();
-    // Example loop to insert multiple rows
-    char choice;
-
-    do {
-        insertRow();
-        cout << "Insert another row? (Y/N): ";
-        cin >> choice;
-        cin.ignore();
-        cout << "\n";
-    } while (toupper(choice) == 'Y');
-
-    displayCSV();
-
-    // Auto-save to CSV
-    saveToCSV(sheetName + ".txt");
-
-    cout << "-------------------------------------------\n";
-    cout << "End of Milestone 1 Output\n";
-    cout << "-------------------------------------------\n";
-*/
 
 // =============================
 // Helper: Validate INT input
@@ -398,6 +378,19 @@ bool isLabelStudentID(string value) {
     }
 
     return (value == "studentid" || value == "id");
+}
+
+// =============================
+// Helper: Find which column index holds the Student ID
+// =============================
+int findIDColumn(ColumnData& colData) {
+    for (int i = 0; i < colData.columnCount; i++) {
+        // We check the NAME using your helper function
+        if (isLabelStudentID(colData.columnNames[i])) {
+            return i;
+        }
+    }
+    return -1; // Not found
 }
 
 // =============================
@@ -741,4 +734,189 @@ void showDatabase(const vector<string> &databaseList){
     }
     cout << "-1- Create New Database" << endl;
     cout << "-2- Exit the Program" << endl;
+}
+
+// =============================
+// Load Record Implementation
+// =============================
+// =============================
+// Load Record Implementation (Basic C++ Version)
+// =============================
+void loadRecord(string fullPath, ColumnData& colData, AttendanceRecord& rowData) {
+    ifstream file(fullPath);
+
+    if (!file.is_open()) {
+        cout << "Error: File " << fullPath << " not found!\n\n";
+        return;
+    }
+
+    string line;
+
+    // 1. Retrieve headers
+    if (getline(file, line)) {
+        colData.columnCount = 0;
+        string word = "";
+
+        // Loop through every character in the line
+        for (int i = 0; i < line.length(); i++) {
+            if (line[i] == ',') {
+                // Comma found: Save the current word and reset
+                if (colData.columnCount < MAX_COLS) {
+                    colData.columnNames[colData.columnCount] = word;
+                    colData.columnTypes[colData.columnCount] = (isLabelStudentID(word)) ? "INT" : "TEXT";
+                    colData.columnCount++;
+                }
+                word = ""; // Reset word for the next column
+            }
+            else if (line[i] != '\r') {
+                // If it's not a comma and not a carriage return, add letter to word
+                word = word + line[i];
+            }
+        }
+        // IMPORTANT: Save the very last word after the loop finishes
+        // (because the line doesn't end with a comma)
+        if (colData.columnCount < MAX_COLS) {
+            colData.columnNames[colData.columnCount] = word;
+            colData.columnTypes[colData.columnCount] = (isLabelStudentID(word)) ? "INT" : "TEXT";
+            colData.columnCount++;
+        }
+    }
+
+    // 2. Retrieve descriptions
+    if (getline(file, line)) {
+        int dCol = 0;
+        string word = "";
+
+        for (int i = 0; i < line.length(); i++) {
+            if (line[i] == ',') {
+                if (dCol < colData.columnCount) {
+                    colData.columnDescription[dCol] = word;
+                    dCol++;
+                }
+                word = "";
+            }
+            else if (line[i] != '\r') {
+                word = word + line[i];
+            }
+        }
+        // Save the last word
+        if (dCol < colData.columnCount) {
+            colData.columnDescription[dCol] = word;
+        }
+    }
+
+    // 3. Retrieve records
+    rowData.rowCount = 0;
+    while (rowData.rowCount < MAX_ROWS && getline(file, line)) {
+        if (isEmpty(line)) continue; // Skip empty lines
+
+        int col = 0;
+        string word = "";
+
+        for (int i = 0; i < line.length(); i++) {
+            if (line[i] == ',') {
+                if (col < colData.columnCount) {
+                    rowData.tableData[rowData.rowCount][col] = word;
+                    col++;
+                }
+                word = "";
+            }
+            else if (line[i] != '\r') {
+                word = word + line[i];
+            }
+        }
+        // Save the last word
+        if (col < colData.columnCount) {
+            rowData.tableData[rowData.rowCount][col] = word;
+        }
+
+        rowData.rowCount++;
+    }
+
+    file.close();
+    cout << "\nFile loaded successfully! " << rowData.rowCount << " records retrieved.\n";
+}
+
+// =============================
+// Update Record Implementation
+// =============================
+void updateRecord(ColumnData& colData, AttendanceRecord& rowData) {
+    // 1. Find the ID Column automatically
+    int idCol = findIDColumn(colData);
+
+    if (idCol == -1) {
+        cout << "Error: No Student ID column found. Cannot identify records.\n";
+        return;
+    }
+
+    string id;
+    cout << "Select Student ID you want to update: ";
+    getline(cin, id);
+
+    for (int i = 0; i < rowData.rowCount; i++) {
+        // Compare input ID with data in the ID column
+        if (rowData.tableData[i][idCol] == id) {
+            cout << "\nUpdating record for " << id << ". Enter 'x' to keep current value.\n";
+
+            for (int j = 0; j < colData.columnCount; j++) {
+                // Skip updating the ID column itself
+                if (j == idCol) continue;
+
+                string val;
+                cout << "Column: " << colData.columnNames[j] << " (Current: " << rowData.tableData[i][j] << "): ";
+                getline(cin, val);
+
+                if (val != "x" && val != "X") {
+                    rowData.tableData[i][j] = val;
+                }
+            }
+            cout << "Update successful!\n";
+            return;
+        }
+    }
+    cout << "ERROR: Student ID " << id << " not found!\n";
+}
+
+// =============================
+// Delete Record Implementation
+// =============================
+void deleteRecord(ColumnData& colData, AttendanceRecord& rowData) {
+    // 1. Find the ID Column automatically
+    int idCol = findIDColumn(colData);
+
+    if (idCol == -1) {
+        cout << "Error: No Student ID column found.\n";
+        return;
+    }
+
+    string id;
+    cout << "Select Student ID you want to delete: ";
+    getline(cin, id);
+
+    for (int i = 0; i < rowData.rowCount; i++) {
+        if (rowData.tableData[i][idCol] == id) {
+            cout << "\nRecord found: ";
+            for(int c = 0; c < colData.columnCount; c++) {
+                cout << rowData.tableData[i][c] << " ";
+            }
+
+            cout << "\nAre you sure you want to delete? (Y/N): ";
+            char confirm;
+            cin >> confirm;
+            cin.ignore(1000, '\n');
+
+            if (toupper(confirm) == 'Y') {
+                // Shift rows up to overwrite the deleted one
+                for (int k = i; k < rowData.rowCount - 1; k++) {
+                    for (int c = 0; c < colData.columnCount; c++) {
+                        rowData.tableData[k][c] = rowData.tableData[k + 1][c];
+                    }
+                }
+                rowData.rowCount--;
+                cout << "Delete successful!\n";
+            }
+            return;
+        }
+    }
+    cout << "ERROR: Student ID " << id << " not found.\n";
 }
