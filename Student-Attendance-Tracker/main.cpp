@@ -30,8 +30,6 @@
 #include <cstring>
 #include <thread>
 #include <chrono>
-#include <sstream> // Required for CSV parsing
-
 using namespace std;
 
 namespace fs = std::filesystem;
@@ -76,8 +74,8 @@ void showDatabase(const vector<string>&);
 vector<string> loadSheet(const string& path);
 void showSheet(const vector<string>& sheets);
 
-// Updated Prototypes for Record Management
-int findIDColumn(ColumnData& colData); // New Helper
+// UPDATED: Prototypes for the new functions
+int findIDColumn(ColumnData& colData);
 void loadRecord(string fullPath, ColumnData& colData, AttendanceRecord& rowData);
 void updateRecord(ColumnData& colData, AttendanceRecord& rowData);
 void deleteRecord(ColumnData& colData, AttendanceRecord& rowData);
@@ -88,7 +86,7 @@ void deleteRecord(ColumnData& colData, AttendanceRecord& rowData);
 int main() {
 
     // Local variable initialization
-    int databaseCount, sheetCount;
+    int databaseCount, sheetCount, recordCount;
     int choiceDatabaseInt, choiceSheetInt, choiceRecordInt;
     string choiceDatabase, choiceSheet;
     int choiceRecord;
@@ -116,7 +114,7 @@ int main() {
         //LEVEL 1: Database Choice Input Validation + Process
         do {
             cout << "Loading database from system ...\n" << endl;
-            this_thread::sleep_for(chrono::seconds(1));
+            this_thread::sleep_for(chrono::seconds(2));
 
             databaseList = loadDatabase();
             cout << "Available Database:" << endl;
@@ -176,12 +174,10 @@ int main() {
         if (choiceDatabaseInt != -2){
 
             //LEVEL 2: Sheet selection
-            string databasePath = "Database/" + currentDatabase;
-
             do {
                 exitDatabase = false;
                 cout << "\nLoading " << currentDatabase << " ...\n" << endl;
-                this_thread::sleep_for(chrono::seconds(1));
+                this_thread::sleep_for(chrono::seconds(2));
 
                 cout << "------------------------------------------------\n";
                 cout << "Database- " << currentDatabase << endl;
@@ -189,7 +185,9 @@ int main() {
 
                 //LEVEL 2: Sheet Choice Input Validation + Process
                 do {
-                    sheetList = loadSheet(databasePath);
+                    currentDatabase = "Database/" + currentDatabase;
+
+                    sheetList = loadSheet(currentDatabase);
                     showSheet(sheetList);
                     cout << "Please select the attendance sheet you want to update or create a new attendance sheet: (Enter number) ";
                     cin >> choiceSheet;
@@ -222,12 +220,12 @@ int main() {
                                 continue;
                             }
 
-                            if(!filenameExisted(databasePath + "/" + sheetName+".txt")){
+                            if(!filenameExisted(currentDatabase + "/" + sheetName+".txt")){
                                 cout << "Error: The filename " << sheetName << " already existed.\n" << endl;
                                 continue;
                             }
 
-                            columnRecord = createSheet(databasePath + "/" + sheetName + ".txt");
+                            columnRecord = createSheet(currentDatabase + "/" + sheetName + ".txt");
                             createSheetStatus = true;
                             newSheet = true;
 
@@ -247,15 +245,14 @@ int main() {
                         exitDatabase = true;
                         exitProgram = true;
                         break;
-                    } else if((choiceSheetInt - 1) >= 0 && choiceSheetInt <= sheetList.size()) {
-                        // Logic for selecting an EXISTING sheet
-                        currentSheet = sheetList[choiceSheetInt - 1];
-                        sheetName = currentSheet;
+                    } else if((choiceSheetInt - 1) >= 0 && choiceSheetInt <= sheetList.size()){
+                        for(int counterSheet = 0; counterSheet < sheetList.size(); counterSheet++){
+                            if((choiceSheetInt - 1) == counterSheet){
+                                currentSheet = sheetList[counterSheet];
+                                break;
+                            }
+                        }
                         choiceSheetStatus = true;
-
-                        // Load existing data immediately
-                        loadRecord(databasePath + "/" + sheetName + ".txt", columnRecord, rowRecord);
-
                     } else {
                         cout << "Error: Invalid choice. Please try again." << endl;
                         choiceSheetStatus = false;
@@ -268,6 +265,13 @@ int main() {
                     //LEVEL 3: Record selection
                     do {
 
+                        cout << "\nLoading " << currentSheet << " ...\n" << endl;
+                        this_thread::sleep_for(chrono::seconds(2));
+
+                        cout << "------------------------------------------------\n";
+                        cout << "Attendance Sheet- " << currentSheet << endl;
+                        cout << "------------------------------------------------\n";
+
                         if(newSheet){
                             char choice;
                             do {
@@ -278,11 +282,14 @@ int main() {
                                 cout << "\n";
                             } while (toupper(choice) == 'Y');
 
-                            saveToCSV(databasePath + "/" + sheetName+".txt", columnRecord, rowRecord);
+                            saveToCSV(sheetName+".txt", columnRecord, rowRecord);
                             newSheet = false;
                         }
 
-                        // Display current data (Acts as the View function)
+                        // MODIFIED: Changed commented line to actual function call
+                        loadRecord(currentDatabase + "/" + currentSheet + ".txt", columnRecord, rowRecord);
+
+                        // MODIFIED: Added arguments to displayCSV
                         displayCSV(columnRecord, rowRecord);
 
                         cout << "Action you can perform:" << endl;
@@ -301,15 +308,14 @@ int main() {
                             switch(choiceRecord){
                                 case 1:
                                     rowRecord = insertRow(columnRecord);
-                                    saveToCSV(databasePath + "/" + sheetName+".txt", columnRecord, rowRecord);
                                     break;
                                 case 2:
+                                    // MODIFIED: Changed commented line to actual function call
                                     updateRecord(columnRecord, rowRecord);
-                                    saveToCSV(databasePath + "/" + sheetName+".txt", columnRecord, rowRecord);
                                     break;
                                 case 3:
+                                    // MODIFIED: Changed commented line to actual function call
                                     deleteRecord(columnRecord, rowRecord);
-                                    saveToCSV(databasePath + "/" + sheetName+".txt", columnRecord, rowRecord);
                                     break;
                                 case 4:
                                     exitSheet = true;
@@ -378,19 +384,6 @@ bool isLabelStudentID(string value) {
     }
 
     return (value == "studentid" || value == "id");
-}
-
-// =============================
-// Helper: Find which column index holds the Student ID
-// =============================
-int findIDColumn(ColumnData& colData) {
-    for (int i = 0; i < colData.columnCount; i++) {
-        // We check the NAME using your helper function
-        if (isLabelStudentID(colData.columnNames[i])) {
-            return i;
-        }
-    }
-    return -1; // Not found
 }
 
 // =============================
@@ -737,8 +730,18 @@ void showDatabase(const vector<string> &databaseList){
 }
 
 // =============================
-// Load Record Implementation
+// Helper: Find which column index holds the Student ID
 // =============================
+int findIDColumn(ColumnData& colData) {
+    for (int i = 0; i < colData.columnCount; i++) {
+        // We check the NAME using your helper function
+        if (isLabelStudentID(colData.columnNames[i])) {
+            return i;
+        }
+    }
+    return -1; // Not found
+}
+
 // =============================
 // Load Record Implementation (Basic C++ Version)
 // =============================
