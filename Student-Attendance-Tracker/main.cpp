@@ -79,6 +79,7 @@ int findIDColumn(ColumnData&);
 void loadRecord(string, ColumnData&, AttendanceRecord&);
 bool updateRecord(ColumnData&, AttendanceRecord&);
 bool deleteRecord(ColumnData&, AttendanceRecord&);
+bool isDuplicateID(AttendanceRecord&, int, string);
 
 // =============================
 // MAIN PROGRAM
@@ -337,6 +338,9 @@ int main() {
 
                     } while(!exitSheet);
 
+                    rowRecord.rowCount = 0;
+                    columnRecord.columnCount = 0;
+
                     exitSheet = false;
                     currentSheet = "";
                 }
@@ -507,6 +511,14 @@ void insertRow(ColumnData& column, AttendanceRecord& row) {
             // INT validation
             if (column.columnTypes[col] == "INT") {
                 if (isInteger(value)) {
+                    if (isLabelStudentID(column.columnNames[col])) {
+                        if (isDuplicateID(row, col, value)) {
+                            cout << "Error: Student ID " << value << " already exists in the list.\n";
+                            this_thread::sleep_for(chrono::seconds(1));
+                            continue;
+                        }
+                    }
+                    // ===============================================
                     row.tableData[row.rowCount][col] = value;
                     break;
                 } else {
@@ -516,8 +528,13 @@ void insertRow(ColumnData& column, AttendanceRecord& row) {
             }
             else {
                 // TEXT -> no validation needed
-                row.tableData[row.rowCount][col] = value;
-                break;
+                if (!isEmpty(value)) {
+                    row.tableData[row.rowCount][col] = value;
+                    break;
+                } else {
+                    cout << "Error: Field cannot be empty. Please enter data.\n";
+                    this_thread::sleep_for(chrono::seconds(1));
+                }
             }
         }
     }
@@ -943,5 +960,17 @@ bool deleteRecord(ColumnData& colData, AttendanceRecord& rowData) {
     }
     cout << "ERROR: Student ID " << id << " not found.\n";
     this_thread::sleep_for(chrono::seconds(1));
+    return false;
+}
+
+// =============================
+// Helper: Check for Duplicate ID
+// =============================
+bool isDuplicateID(AttendanceRecord& row, int colIndex, string valueToCheck) {
+    for (int r = 0; r < row.rowCount; r++) {
+        if (row.tableData[r][colIndex] == valueToCheck) {
+            return true;
+        }
+    }
     return false;
 }
