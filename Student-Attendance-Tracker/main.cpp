@@ -645,13 +645,16 @@ void saveRecord(const fs::path& relPath, string& filename, ColumnData& column, A
 // Helper: Validate databaseName
 // =============================
 bool isValidDatabaseName(const string& databaseName){
+    // string containing characters typically forbidden in file systems
     string forbidden = "\\/:*?\"<>|";
 
     for (char c : databaseName){
+        // check if the current character 'c' exists within the 'forbidden' string
         if(forbidden.find(c) != string::npos)
             return false;
     }
 
+    // file systems often reject names ending in a period (.) as it causes path issues
     if(databaseName.back() == '.'){
         return false;
     }
@@ -664,10 +667,13 @@ bool isValidDatabaseName(const string& databaseName){
 // =============================
 string trimDatabaseName(string& databaseName){
     int counter = 0;
+    // continue removing characters from the end as long as the string 
+    // is not empty and the last character is a space
     while(!isEmpty(databaseName) && databaseName.back() == ' '){
         databaseName.pop_back();
         counter++;
     }
+    // feedback to the user if the input was modified
     if (counter>0){
         cout << "Note: Trailing space detected and removed.";
     }
@@ -727,10 +733,13 @@ vector<string> loadSheet(const string& path) {
     return sheetList;
 }
 
-//Show Sheet in Database
+// =============================
+// Show Sheet
+// =============================
 void showSheet(const vector<string>& sheets) {
     int index = 1;
 
+    // iterate through each sheet name and display it with a .txt extension
     for (const auto& sheet : sheets) {
         cout << index++ << "- " << sheet << ".txt" << endl;
     }
@@ -744,9 +753,13 @@ vector<string> loadDatabase() {
 
     vector<string> databaseList;
 
+    // check if the "Database" folder exists and is actually a directory
     if (fs::exists("Database") && fs::is_directory("Database")){
+        // iterate through every item found inside the "Database" folder
         for (const auto& entry : fs::directory_iterator("Database")) {
+            // only add to the list if the entry is a folder (database), not a file
             if (entry.is_directory()) {
+                // extract just the filename and add to our list
                 databaseList.push_back(entry.path().filename().string());
             }
         }
@@ -755,8 +768,13 @@ vector<string> loadDatabase() {
     return databaseList;
 }
 
+// =============================
+// Show Database
+// =============================
 void showDatabase(const vector<string> &databaseList){
+    // loop through the vector to print each database with its corresponding index
     for(int i = 0; i < databaseList.size(); i++){
+        // (i+1) ensures the list starts from 1 for better readability
         cout << (i+1) << "- " << databaseList[i] << endl;
     }
     cout << "-1- Create New Database" << endl;
@@ -766,42 +784,45 @@ void showDatabase(const vector<string> &databaseList){
 // =============================
 // Load Record Implementation
 // =============================
-// =============================
-// Load Record Implementation (Basic C++ Version)
-// =============================
 void loadRecord(string fullPath, ColumnData& colData, AttendanceRecord& rowData) {
+    // initialize with name and open file
     ifstream file(fullPath);
 
+    //no file is found
     if (!file.is_open()) {
         cout << "Error: File " << fullPath << " not found!\n\n";
         return;
     }
 
+    // declare line to hold the full string
     string line;
 
-    // 1. Retrieve headers
+    // 1. retrieve headers
+    // get the first line, starts with the first column (index0), the word is empty first
     if (getline(file, line)) {
         colData.columnCount = 0;
         string word = "";
 
-        // Loop through every character in the line
+        // loop through every character in the line
+        // starts for the first column, for the whole line
         for (int i = 0; i < line.length(); i++) {
             if (line[i] == ',') {
-                // Comma found: Save the current word and reset
+                // comma found, check first if exceeds or not, then save the current word into the first column
+                // then call function checks its type, increment to the next column
                 if (colData.columnCount < MAX_COLS) {
                     colData.columnNames[colData.columnCount] = word;
                     colData.columnTypes[colData.columnCount] = (isLabelStudentID(word)) ? "INT" : "TEXT";
                     colData.columnCount++;
                 }
-                word = ""; // Reset word for the next column
+                word = ""; // reset word for the next column
             }
+            // if its not a comma and not a carriage return, the words is added one by one alphabet
             else if (line[i] != '\r') {
-                // If it's not a comma and not a carriage return, add letter to word
                 word = word + line[i];
             }
         }
-        // IMPORTANT: Save the very last word after the loop finishes
-        // (because the line doesn't end with a comma)
+        // save the very last word after the loop finishes
+        // the line doesnt end with a comma
         if (colData.columnCount < MAX_COLS) {
             colData.columnNames[colData.columnCount] = word;
             colData.columnTypes[colData.columnCount] = (isLabelStudentID(word)) ? "INT" : "TEXT";
@@ -809,37 +830,45 @@ void loadRecord(string fullPath, ColumnData& colData, AttendanceRecord& rowData)
         }
     }
 
-    // 2. Retrieve descriptions
+    // 2. retrieve descriptions
+    // read second line, initialize col for description purpose, word is empty now first
     if (getline(file, line)) {
         int dCol = 0;
         string word = "";
 
         for (int i = 0; i < line.length(); i++) {
+            // comma found, check first if exceeds or not, then save the current word into the first column
+            // then call function checks its type, increment to the next column
             if (line[i] == ',') {
                 if (dCol < colData.columnCount) {
                     colData.columnDescription[dCol] = word;
                     dCol++;
                 }
-                word = "";
+                word = ""; // reset word for the next column
             }
+            // if its not a comma and not a carriage return, the words is added one by one alphabet
             else if (line[i] != '\r') {
                 word = word + line[i];
             }
         }
-        // Save the last word
+        // save the last word, doesnt have comma
         if (dCol < colData.columnCount) {
             colData.columnDescription[dCol] = word;
         }
     }
 
-    // 3. Retrieve records
+    // 3. retrieve records, for detail student name, id and status, etc
+    // initialize start with first row, and check if there more lines existing
     rowData.rowCount = 0;
     while (rowData.rowCount < MAX_ROWS && getline(file, line)) {
-        if (isEmpty(line)) continue; // Skip empty lines
+        if (isEmpty(line)) continue; // skip empty lines, and go back to while loop, check next line
 
+        // start with first row, first column
         int col = 0;
         string word = "";
 
+        // if there is a comma, save the first word into the first column
+        // like an array, then proceed to the beside column
         for (int i = 0; i < line.length(); i++) {
             if (line[i] == ',') {
                 if (col < colData.columnCount) {
@@ -852,14 +881,14 @@ void loadRecord(string fullPath, ColumnData& colData, AttendanceRecord& rowData)
                 word = word + line[i];
             }
         }
-        // Save the last word
+        // save the last word, that doesnt have a comma
         if (col < colData.columnCount) {
             rowData.tableData[rowData.rowCount][col] = word;
         }
 
         rowData.rowCount++;
     }
-
+     // close the file and show number of students that has been retrieved
     file.close();
     cout << "\nFile loaded successfully! " << rowData.rowCount << " records retrieved.\n";
 }
@@ -868,27 +897,34 @@ void loadRecord(string fullPath, ColumnData& colData, AttendanceRecord& rowData)
 // Update Record Implementation
 // =============================
 bool updateRecord(ColumnData& colData, AttendanceRecord& rowData) {
-    // 1. Find the ID Column automatically
+    // 1. call the findidcolumna and assign the index to idcol
     int idCol = findIDColumn(colData);
 
+    // if return -1 means no student id can be found
     if (idCol == -1) {
         cout << "Error: No Student ID column found. Cannot identify records.\n";
         return false;
     }
 
+    // declare id that want to be find and get input
     string id;
     cout << "Select Student ID you want to update: ";
     getline(cin, id);
 
+    // we gotten the column from the idcol above, we stick to the same column and interate the rows
     for (int i = 0; i < rowData.rowCount; i++) {
-        // Compare input ID with data in the ID column
+        // compare input ID with data in the ID column
         if (rowData.tableData[i][idCol] == id) {
             cout << "\nUpdating record for " << id << ". Enter 'x' to keep current value.\n";
 
             for (int j = 0; j < colData.columnCount; j++) {
-                // Skip updating the ID column itself
+                // skip updating the ID column itself, and go through everything else
                 if (j == idCol) continue;
 
+                // use val to store the input, it cannot be empty, shows the current column and info
+                // if the input is not x, we update with the latest input
+                // if input is x, we remain the same
+                // return true so main will run and update the database
                 string val;
                 do {
                     cout << "Column: " << colData.columnNames[j] << " (Current: " << rowData.tableData[i][j] << "): ";
@@ -916,38 +952,46 @@ bool updateRecord(ColumnData& colData, AttendanceRecord& rowData) {
 // Delete Record Implementation
 // =============================
 bool deleteRecord(ColumnData& colData, AttendanceRecord& rowData) {
-    // 1. Find the ID Column automatically
+    // 1. call the findidcolumn and assign index to idcol
     int idCol = findIDColumn(colData);
 
+    // if idcol is return with -1, no column with id is found and will not delete any record in main
     if (idCol == -1) {
         cout << "Error: No Student ID column found.\n";
         this_thread::sleep_for(chrono::seconds(1));
         return false;
     }
 
+    // declare variable to hold id input and get input
     string id;
     cout << "Select Student ID you want to delete: ";
     getline(cin, id);
 
+    // loop through every row but the same column space from the idCol to find the same input iD
     for (int i = 0; i < rowData.rowCount; i++) {
         if (rowData.tableData[i][idCol] == id) {
+            // if found, it shows all the info of the student
             cout << "\nRecord found: ";
             for(int c = 0; c < colData.columnCount; c++) {
                 cout << rowData.tableData[i][c] << " ";
             }
 
             cout << "\nAre you sure you want to delete? (Y/N): ";
+            // declare variable to hold confirm input
             char confirm;
             cin >> confirm;
             cin.ignore(1000, '\n');
 
+            // if input is Y, runs the delete
             if (toupper(confirm) == 'Y') {
-                // Shift rows up to overwrite the deleted one
+                // shift rows up to overwrite the deleted one, then it is copy column by column
                 for (int k = i; k < rowData.rowCount - 1; k++) {
                     for (int c = 0; c < colData.columnCount; c++) {
+                        // assign the below row upwards one by one
                         rowData.tableData[k][c] = rowData.tableData[k + 1][c];
                     }
                 }
+                // decrement for number of row, still exist, but when loop doesnt loop to the extra one
                 rowData.rowCount--;
                 cout << "Delete successful!\n";
                 return true;
@@ -966,7 +1010,9 @@ bool deleteRecord(ColumnData& colData, AttendanceRecord& rowData) {
 // Helper: Check for Duplicate ID
 // =============================
 bool isDuplicateID(AttendanceRecord& row, int colIndex, string valueToCheck) {
+    // iterate through every row in the current data set
     for (int r = 0; r < row.rowCount; r++) {
+        // check if the data at the current row and column matches our input
         if (row.tableData[r][colIndex] == valueToCheck) {
             return true;
         }
