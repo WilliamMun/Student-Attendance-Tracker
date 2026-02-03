@@ -488,11 +488,10 @@ ColumnData createSheet(const string& sheetName) {
 // =============================
 void insertRow(ColumnData& column, AttendanceRecord& row) {
 
-    do{
-        if (row.rowCount >= MAX_ROWS) {
-            cout << "Error: Maximum row limit reached.\n";
-        }
-    } while(row.rowCount >= MAX_ROWS);
+    if (row.rowCount >= MAX_ROWS) {
+        cout << "Error: Maximum row limit reached.\n";
+        return;
+    }
 
     cout << "-------------------------------------------\n";
     cout << "Insert New Attendance Row\n";
@@ -518,7 +517,7 @@ void insertRow(ColumnData& column, AttendanceRecord& row) {
                             continue;
                         }
                     }
-                    // ===============================================
+
                     row.tableData[row.rowCount][col] = value;
                     break;
                 } else {
