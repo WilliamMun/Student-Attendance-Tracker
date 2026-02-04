@@ -10,10 +10,10 @@
 // Member_4: 252UC241TT | ONG ZHONG YIK  | ONG.ZHONG.YIK1@STUDENT.MMU.EDU.MY  | 011-5990 6040
 // *********************************************************
 // Task Distribution
-// Member_1:
-// Member_2:
-// Member_3:
-// Member_4:
+// Member_1:Create database, TrimDatabaseName, isValidDatabaseName, isDuplicateID, Refine and Modofiy Milestone 1 Code and Flowchart, Documentation 1.0, 2.0 7.0 8.0, 3.0 Flowchart for own part
+// Member_2:FindIDColumn, LoadRecord, UpdateRecord, DeleteRecord, Documentation 6.0, 3.0 Flowchart for own part
+// Member_3:LoadSheet, ShowSheet, Documentation 4.0, 3.0 Flowchart for own part
+// Member_4:LoadDatabase, ShowDatabase, Documentation 5.0, 3.0 Flowchart for own part
 // *********************************************************
 
 // ===========================
