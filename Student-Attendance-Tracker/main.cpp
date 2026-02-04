@@ -169,7 +169,7 @@ int main() {
                 choiceDatabaseStatus = false;
             }
 
-        } while(choiceDatabaseStatus == false);
+        } while(choiceDatabaseStatus == false); // End of Level 1 Database Selection Level Input Validation
 
         if (choiceDatabaseInt != -2){
 
@@ -264,7 +264,7 @@ int main() {
                         choiceSheetStatus = false;
                     }
 
-                } while(!choiceSheetStatus);
+                } while(!choiceSheetStatus); // End of Level 2 Sheet Selection Level Input Validation
 
                 if (choiceSheetInt != -2 && choiceSheetInt != -3) {
 
@@ -334,23 +334,23 @@ int main() {
                             default:
                                 cout << "Error: Invalid choice. Please try again." << endl;
                                 this_thread::sleep_for(chrono::seconds(1));
-                        }
+                        } // End of switch
 
-                    } while(!exitSheet);
+                    } while(!exitSheet); // End of Level 3 Record Selection Level
 
                     rowRecord.rowCount = 0;
                     columnRecord.columnCount = 0;
 
                     exitSheet = false;
                     currentSheet = "";
-                }
+                } // End of if (choiceSheetInt != -2 && choiceSheetInt != -3) statement
 
-            } while(!exitDatabase);
+            } while(!exitDatabase); // End of Level 2 Sheet Selection Level
 
             currentDatabase = "";
-        }
+        } // End of if (choiceDatabaseInt != -2) statement
 
-    } while(!exitProgram);
+    } while(!exitProgram); // End of Level 1 Database Selection Level
 
     cout << "Thank you for using MMU Student Attendance Tracker System!" << endl;
 
@@ -667,7 +667,7 @@ bool isValidDatabaseName(const string& databaseName){
 // =============================
 string trimDatabaseName(string& databaseName){
     int counter = 0;
-    // continue removing characters from the end as long as the string 
+    // continue removing characters from the end as long as the string
     // is not empty and the last character is a space
     while(!isEmpty(databaseName) && databaseName.back() == ' '){
         databaseName.pop_back();
@@ -714,7 +714,9 @@ bool createDatabase(string& databaseName){
     }
 }
 
+// =============================
 // Load Sheet in Database
+// =============================
 vector<string> loadSheet(const string& path) {
     vector<string> sheetList;
 
@@ -749,6 +751,9 @@ void showSheet(const vector<string>& sheets) {
     cout << "-3- Exit the Program" << endl;
 }
 
+// =============================
+// Load Database in filesystem
+// =============================
 vector<string> loadDatabase() {
 
     vector<string> databaseList;
